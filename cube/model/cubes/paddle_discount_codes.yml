@@ -1,0 +1,22 @@
+cubes:
+  - name: paddle_discount_codes
+    sql_table: airbyte.google_sheets_discount_code_metadata
+    description: "For adding cleaner values that can be queried for the messy Paddle data. Migrated from views/sales/paddle_discount_codes.view.lkml"
+
+    dimensions:
+      - name: code
+        sql: code
+        type: string
+        primary_key: true
+
+      - name: department
+        sql: "LOWER({CUBE}.department)"
+        type: string
+
+      - name: partner
+        sql: "REPLACE(LOWER({CUBE}.partner), ' ', '_')"
+        type: string
+
+      - name: campaign
+        sql: "LOWER({CUBE}.campaign)"
+        type: string
