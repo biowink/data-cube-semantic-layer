@@ -326,10 +326,10 @@ cubes:
         type: string
         public: false
 
-      - name: tax
-        sql: tax
-        type: number
-        public: false
+#      - name: tax
+#        sql: tax
+#        type: number
+#        public: false
 
       - name: tax_rate
         sql: tax_rate
