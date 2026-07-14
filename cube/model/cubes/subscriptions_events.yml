@@ -2,6 +2,7 @@ cubes:
   - name: subscriptions_events
     sql_table: der.all_subscriptions_events
     description: "Migrated from views/sales/subscriptions_events.view.lkml"
+    public: false
 
     joins:
       - name: users

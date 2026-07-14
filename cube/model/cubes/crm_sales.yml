@@ -2,6 +2,7 @@ cubes:
   - name: crm_sales
     sql_table: airbyte.backend_crm_promo_sales
     data_source: default
+    public: false
 
     dimensions:
       - name: _pk

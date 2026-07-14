@@ -1,6 +1,6 @@
 services:
   cube:
-    image: cubejs/cube:v1.5
+    image: cubejs/cube:v1.6.69
     platform: linux/amd64
     container_name: cube-semantic-layer
     ports:
@@ -25,7 +25,7 @@ services:
       - metabase-db-data:/var/lib/postgresql/data
 
   metabase:
-    image: metabase/metabase:v0.49.8
+    image: metabase/metabase:v0.61.1.x
     container_name: cube-metabase
     ports:
       - "3000:3000"

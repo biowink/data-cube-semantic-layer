@@ -2,6 +2,7 @@ cubes:
   - name: user_last_properties
     sql_table: user_metrics.user_last_session_attributes
     description: "Migrated from views/users/user_last_properties.view.lkml"
+    public: false
 
     joins:
       - name: market_mapping

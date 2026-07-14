@@ -2,6 +2,7 @@ cubes:
   - name: market_mapping
     sql_table: core.countries
     description: "Migrated from market_mapping.view.lkml"
+    public: false
 
     dimensions:
       # no primary key declared in the source LookML view; country_name is the

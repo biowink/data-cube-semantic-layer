@@ -3,6 +3,7 @@ cubes:
   - name: user_profiles
     sql_table: der.profiles
     description: "Migrated from views/users/user_profiles.view.lkml"
+    public: false
 
     dimensions:
       - name: analytics_id

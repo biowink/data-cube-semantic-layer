@@ -2,6 +2,7 @@ cubes:
   - name: adjust_attribution
     sql_table: user_metrics.adjust_attribution
     description: "Migrated from adjust_attirbution_view.lkml"
+    public: false
 
     joins:
       # needed for the network_group / network_group_without_owned dimensions below,

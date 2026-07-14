@@ -2,6 +2,7 @@ cubes:
   - name: user_last_optional_consent_status
     sql_table: user_metrics.user_last_optional_consent_status
     description: "Migrated from user_last_optional_consent_status.view.lkml. Looker view label: \"User Last Optional Consent Status\""
+    public: false
 
     dimensions:
       # no primary key declared in the source LookML view; analytics_id is one
