@@ -76,11 +76,11 @@ Open **http://localhost:3000**, complete the setup wizard (first run only — sk
 **Doing the same checks visually in the Playground (dev mode), instead of `curl`:**
 
 1. Open http://localhost:4000 — the **Data Model** tab lists every registered cube/view with its fields, equivalent to inspecting the `/meta` response in step 2.
-![img_1.png](img_1.png)
+![Models.png](Models.png)
 2. Switch to the **Playground** tab. Pick `sales` (or whichever view/cube changed) from the left-hand explorer, then check the measures/dimensions you want to test — mirrors the `/load` query body in step 3.
 3. Click **Run** to execute and see results as a table/chart.
 4. Click the **SQL** button (next to Run) to see the exact SQL Cube generated for that query — this is the visual equivalent of checking `allBackAliasMembers`: you can read off which tables got joined and confirm it matches the `join_path` you expect.
-![img.png](img.png)
+![Playground.png](Playground.png)
 
 This is the fastest way to sanity-check a schema change without writing any `curl`/`psql` at all, and is the natural place to start before reaching for the API directly.
 
