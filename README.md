@@ -34,7 +34,7 @@ docker compose up -d
 This brings up three services:
 - `cube` — the Cube API (Playground + SQL API), as above
 - `metabase-db` (`postgres:15`) — Metabase's own application database (saved connections, users, dashboards). Backed by the `metabase-db-data` named volume, so it survives `docker compose down`/`up` cycles — only a `docker compose down -v` (which removes volumes) wipes it.
-- `metabase` — pinned to a specific tag (currently `v0.61.1.x`) in `docker-compose.yml`; bump deliberately rather than tracking `latest`.
+- `metabase` — pinned to a specific tag (currently `v0.61.1.x`) in `docker-compose.yml`.
 
 Open **http://localhost:3000**, complete the setup wizard (first run only — skipped on subsequent starts since the app DB persists), then add a database:
 - Type: **PostgreSQL**
@@ -73,7 +73,16 @@ Open **http://localhost:3000**, complete the setup wizard (first run only — sk
 
 4. Check `transformedQuery.allBackAliasMembers` in the response — it shows the real join path each field resolved through, useful for confirming Cube joined the way you intended.
 
-The same checks can be done visually in the Playground instead of `curl` — pick fields spanning multiple joined cubes/views and hit Run.
+**Doing the same checks visually in the Playground (dev mode), instead of `curl`:**
+
+1. Open http://localhost:4000 — the **Data Model** tab lists every registered cube/view with its fields, equivalent to inspecting the `/meta` response in step 2.
+![img_1.png](img_1.png)
+2. Switch to the **Playground** tab. Pick `sales` (or whichever view/cube changed) from the left-hand explorer, then check the measures/dimensions you want to test — mirrors the `/load` query body in step 3.
+3. Click **Run** to execute and see results as a table/chart.
+4. Click the **SQL** button (next to Run) to see the exact SQL Cube generated for that query — this is the visual equivalent of checking `allBackAliasMembers`: you can read off which tables got joined and confirm it matches the `join_path` you expect.
+![img.png](img.png)
+
+This is the fastest way to sanity-check a schema change without writing any `curl`/`psql` at all, and is the natural place to start before reaching for the API directly.
 
 ### Testing production-mode behavior (visibility, access control)
 
@@ -110,14 +119,17 @@ To actually test this, temporarily run Cube the way it would run in production:
 
 If a field or cube is supposed to be hidden and still shows up in step 3, that's a real schema issue (missing `public: false`, or a view's `excludes:` not covering it) — only trust a "hidden" result observed under this production-mode setup, not under normal dev-mode testing.
 
+**Testing the same thing through Metabase, instead of `psql`, once Cube is in production mode (steps 1-2 above):**
+
+1. Metabase's existing Cube connection was set up with dev-mode's open auth (any username/password worked). It won't authenticate against a production-mode Cube until its stored credentials match — go to **Admin → Databases → your Cube connection → edit**, set username/password to the `CUBEJS_SQL_USER`/`CUBEJS_SQL_PASSWORD` values from step 1 (e.g. `testuser`/`testpass123`), and save. Saving re-tests the connection, so a failure here surfaces immediately.
+2. Trigger **"Sync database schema now"** on that connection to refresh Metabase's cached table list.
+3. In **Admin → Databases → your Cube connection**, or the data browser, confirm only the intended tables show up (e.g. just `sales`) — any cube you marked `public: false` should no longer be listed or browsable.
+4. Open (or create) a question against `sales` and confirm it still runs correctly — this exercises the same production-mode query path as the `psql` check in step 4 above, through Metabase's actual query path instead.
+5. When you revert Cube back to dev mode (step 5 above), Metabase's connection will keep using the production credentials, but dev mode accepts any credentials so it'll keep working — just **re-sync the schema again** to see the full table list reappear.
+
 ### Testing with Metabase
 
 **Re-syncing after a model change:** Metabase caches its own copy of Cube's table/column list. After changing cubes/views, refresh it without touching the connection itself:
-**Admin → Databases → your Cube connection → "Sync database schema now"** (or `POST /api/database/:id/sync_schema` with an admin session token).
+**Admin → Databases → your Cube connection → "Sync database schema now"**.
 
 Renaming or removing a field that's used in an existing saved question breaks that question — a sync only refreshes what Metabase knows exists, it doesn't repair references to fields that no longer do.
-
-**Known Cube/Metabase interaction issues:**
-
-- **`information_schema.columns` lists `public: false` fields even though querying them fails.** Cube's SQL API doesn't filter hidden fields out of its catalog the way the REST/GraphQL API does, so Metabase's schema sync will pick up "hidden" fields and error the moment anything actually queries them (auto X-rays, "browse data", field-value scans). The fix is `excludes:` in the view (see `cube/model/views/sales.yml`), not relying on `public: false` alone — see the production-mode testing section above for why `public: false` looks like it should be enough but isn't sufficient for the SQL API specifically.
-- **Metabase's relative-date filters ("yesterday", "previous N days") generate SQL Cube's rewrite engine can't parse.** The generated pattern is `WHERE col >= CAST(CAST((NOW() + INTERVAL '-1 day') AS DATE) AS TIMESTAMP) AND col < CAST(CAST(NOW() AS DATE) AS TIMESTAMP)`, which fails with `Rewrite Error: Can't detect Cube query and it may be not supported yet`. Confirmed still broken on both `v1.6.69` and `v1.7.2` — this isn't fixed by picking a newer Cube version. Workaround: use a native SQL question, or an explicit/fixed date range in the GUI filter instead of a relative-date shortcut.
