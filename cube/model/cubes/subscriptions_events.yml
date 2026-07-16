@@ -48,7 +48,7 @@ cubes:
         type: string
 
       # dimension_group: backend_created -> base time dim + the timeframes Cube can't
-      # derive at query time (day_of_week/day_of_month/day_of_year/week_of_year/month_name)
+      # derive at query time (day_of_week/day_of_month/day_of_year/week_of_year/month/month_name)
       - name: backend_created_at
         sql: backend_created_at
         type: time
@@ -68,6 +68,10 @@ cubes:
       - name: backend_created_week_of_year
         sql: "week({CUBE}.backend_created_at)"
         type: number
+
+      - name: backend_created_month
+        sql: "DATE_TRUNC('month', {CUBE}.backend_created_at)"
+        type: time
 
       - name: backend_created_month_name
         sql: "date_format({CUBE}.backend_created_at, '%M')"
