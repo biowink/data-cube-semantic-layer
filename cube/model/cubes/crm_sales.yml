@@ -1,0 +1,36 @@
+cubes:
+  - name: crm_sales
+    sql_table: airbyte.backend_crm_promo_sales
+    data_source: default
+
+    dimensions:
+      - name: _pk
+        sql: "CONCAT(COALESCE(name, ''), '-', CAST(start_time AS VARCHAR), '-',  CAST(end_time AS VARCHAR))"
+        type: string
+        primary_key: true
+
+      - name: sale_name
+        sql: COALESCE(name, 'Non Sale Period')
+        type: string
+
+      - name: start_time
+        sql: start_time
+        type: time
+
+      - name: end_time
+        sql: end_time
+        type: time
+
+      - name: sale_period
+        sql: name IS NOT NULL
+        type: boolean
+
+    measures:
+      - name: sale_started_date
+        sql: start_time
+        type: min
+
+#    timeDimensions:
+#      sale_start_at:
+#        sql: start_time
+#        type: time

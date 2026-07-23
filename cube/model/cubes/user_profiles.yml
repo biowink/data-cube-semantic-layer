@@ -1,0 +1,40 @@
+
+cubes:
+  - name: user_profiles
+    sql_table: der.profiles
+    description: "Migrated from views/users/user_profiles.view.lkml"
+
+    dimensions:
+      - name: analytics_id
+        sql: analytics_id
+        type: string
+        primary_key: true
+        public: false
+
+      # dimension_group: birth_date (timeframes: date, month, year)
+      - name: birth_date
+        sql: "CAST({CUBE}.birthday AS TIMESTAMP)"
+        type: time
+
+      - name: current_age
+        sql: "DATE_DIFF('year', CAST({CUBE}.birthday AS TIMESTAMP), CURRENT_DATE)"
+        type: number
+
+      # Looker `type: tier` (tiers: [13,16,20,24,28,32,36,40,44,48], style: integer)
+      # has no Cube equivalent - rebuilt as an explicit CASE bucketing current_age.
+      - name: current_age_group
+        sql: >
+          CASE
+            WHEN {CUBE.current_age} < 13 THEN 'Under 13'
+            WHEN {CUBE.current_age} < 16 THEN '13 to 15'
+            WHEN {CUBE.current_age} < 20 THEN '16 to 19'
+            WHEN {CUBE.current_age} < 24 THEN '20 to 23'
+            WHEN {CUBE.current_age} < 28 THEN '24 to 27'
+            WHEN {CUBE.current_age} < 32 THEN '28 to 31'
+            WHEN {CUBE.current_age} < 36 THEN '32 to 35'
+            WHEN {CUBE.current_age} < 40 THEN '36 to 39'
+            WHEN {CUBE.current_age} < 44 THEN '40 to 43'
+            WHEN {CUBE.current_age} < 48 THEN '44 to 47'
+            ELSE '48 and above'
+          END
+        type: string
