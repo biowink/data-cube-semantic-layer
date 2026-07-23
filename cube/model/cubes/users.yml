@@ -1,0 +1,60 @@
+cubes:
+  - name: users
+    sql_table: core.clue_users
+    description: "Migrated from views/users/users.view.lkml"
+    public: false
+
+    dimensions:
+      - name: analytics_id
+        sql: analytics_id
+        type: string
+        primary_key: true
+
+      # dimension_group: account_created -> base time dim + the timeframes Cube
+      # can't derive at query time (day_of_week/day_of_month/day_of_year/week_of_year/month_num)
+      - name: account_created_at
+        sql: backend_created_at
+        type: time
+
+      - name: account_created_day_of_week
+        sql: "date_format({CUBE}.backend_created_at, '%A')"
+        type: string
+
+      - name: account_created_day_of_month
+        sql: "day_of_month({CUBE}.backend_created_at)"
+        type: number
+
+      - name: account_created_day_of_year
+        sql: "day_of_year({CUBE}.backend_created_at)"
+        type: number
+
+      - name: account_created_week_of_year
+        sql: "week({CUBE}.backend_created_at)"
+        type: number
+
+      - name: account_created_month_num
+        sql: "month({CUBE}.backend_created_at)"
+        type: number
+
+      # helper: day-truncated version - needed by subscriptions_events' duration
+      # dimensions (days_since_account_created, etc), not from the original LookML
+      - name: account_created_date
+        sql: "DATE_TRUNC('day', {CUBE}.backend_created_at)"
+        type: time
+
+      # parameter: date_granularity_selector / dynamic_date_granularity dropped:
+      # Cube lets a client request account_created_at at any granularity
+      # (day/week/month/quarter) per-query natively, so no schema field is needed.
+
+      - name: account_is_verified
+        sql: email_is_verified
+        type: boolean
+
+      - name: is_test_user
+        sql: is_internal_user
+        type: boolean
+
+    measures:
+      - name: user_count
+        sql: analytics_id
+        type: count_distinct
