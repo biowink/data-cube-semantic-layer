@@ -53,4 +53,8 @@ cubes:
         sql: "DATE_TRUNC('day', {CUBE}.backend_created_at)"
         type: time
 
+    measures:
+      - name: count_added_testing
+        type: count
+
 
