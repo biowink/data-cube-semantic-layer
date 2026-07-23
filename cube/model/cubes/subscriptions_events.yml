@@ -4,35 +4,6 @@ cubes:
     description: "Migrated from views/sales/subscriptions_events.view.lkml"
     public: false
 
-    joins:
-      - name: users
-        relationship: many_to_one
-        sql: "{CUBE}.analytics_id = {users.analytics_id}"
-
-      - name: paddle_discount_codes
-        relationship: many_to_one
-        sql: "{CUBE}.code = {paddle_discount_codes.code}"
-
-      - name: user_profiles
-        relationship: many_to_one
-        sql: "{CUBE}.analytics_id = {user_profiles.analytics_id}"
-
-      - name: user_last_properties
-        relationship: many_to_one
-        sql: "{CUBE}.analytics_id = {user_last_properties.analytics_id}"
-
-      - name: crm_sales
-        relationship: many_to_one
-        sql: "{CUBE}.backend_created_at >= {crm_sales.start_time} AND {CUBE}.backend_created_at < {crm_sales.end_time}"
-
-      - name: user_last_optional_consent_status
-        relationship: one_to_one
-        sql: "{CUBE}.analytics_id = {user_last_optional_consent_status.analytics_id}"
-
-      - name: adjust_attribution
-        relationship: one_to_one
-        sql: "{CUBE}.analytics_id = {adjust_attribution.analytics_id}"
-
     dimensions:
       - name: id
         sql: id
