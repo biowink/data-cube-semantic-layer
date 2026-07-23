@@ -2,6 +2,7 @@ cubes:
   - name: users
     sql_table: core.clue_users
     description: "Migrated from views/users/users.view.lkml"
+    public: false
 
     dimensions:
       - name: analytics_id

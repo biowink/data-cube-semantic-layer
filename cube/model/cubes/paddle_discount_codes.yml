@@ -2,6 +2,7 @@ cubes:
   - name: paddle_discount_codes
     sql_table: airbyte.google_sheets_discount_code_metadata
     description: "For adding cleaner values that can be queried for the messy Paddle data. Migrated from views/sales/paddle_discount_codes.view.lkml"
+    public: false
 
     dimensions:
       - name: code

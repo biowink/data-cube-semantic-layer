@@ -6,9 +6,15 @@ views:
       adjust_attribution, user_last_optional_consent_status and (via
       user_last_properties) market_mapping.
 
+    # Cube's field marked public:false alone isn't enough to keep a field out of BI tools
+    # connected via the SQL API. It also has to be excluded from the view.
     cubes:
       - join_path: subscriptions_events
         includes: "*"
+#        excludes:
+#          - subscription_type_suggestion
+#          - tax
+#          - store_fee_rate
 
       - join_path: subscriptions_events.users
         includes: "*"
@@ -17,10 +23,14 @@ views:
       - join_path: subscriptions_events.user_profiles
         includes: "*"
         prefix: true
+        excludes:
+          - analytics_id
 
       - join_path: subscriptions_events.user_last_properties
         includes: "*"
         prefix: true
+        excludes:
+          - analytics_id
 
       - join_path: subscriptions_events.user_last_properties.market_mapping
         includes: "*"
@@ -37,7 +47,20 @@ views:
       - join_path: subscriptions_events.adjust_attribution
         includes: "*"
         prefix: true
+        excludes:
+          - analytics_id
 
       - join_path: subscriptions_events.user_last_optional_consent_status
         includes: "*"
         prefix: true
+        excludes:
+          - analytics_id
+          - consent_health_analytics_revoke_at
+          - consent_product_promotion_revoke_at
+          - consent_scientific_research_revoke_at
+          - consent_usage_analytics_revoke_at
+          - consent_usage_marketing_revoke_at
+          - created_by_task
+          - created_execution_at
+          - etl_created_at
+          - etl_updated_at
