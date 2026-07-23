@@ -555,3 +555,4 @@ cubes:
         sql: "{gross_sales_euro} / NULLIF({transaction_count}, 0)"
         type: number
         format: currency
+
