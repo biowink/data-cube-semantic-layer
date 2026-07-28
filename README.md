@@ -133,3 +133,4 @@ If a field or cube is supposed to be hidden and still shows up in step 3, that's
 **Admin → Databases → your Cube connection → "Sync database schema now"**.
 
 Renaming or removing a field that's used in an existing saved question breaks that question — a sync only refreshes what Metabase knows exists, it doesn't repair references to fields that no longer do.
+
