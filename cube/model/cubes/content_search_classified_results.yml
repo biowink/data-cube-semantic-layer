@@ -69,7 +69,6 @@ cubes:
 
       - name: topic
         sql: topic
-        
         type: string
 
       - name: is_zero_result
