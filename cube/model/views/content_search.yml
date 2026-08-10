@@ -1,0 +1,14 @@
+views:
+  - name: content_search_classification
+    description: "Migrated from content_search_classified_results.lkml"
+
+    cubes:
+      - join_path: content_search_classified_results
+        includes: "*"
+        excludes:
+          - id
+          - article_id
+          - query_id
+          - version_id
+          - etl_created_at
+          - active_days
