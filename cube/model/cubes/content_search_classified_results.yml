@@ -1,0 +1,153 @@
+cubes:
+  - name: content_search_classified_results
+    sql_table: der.content_search_classified_results
+    description: "Migrated from content_search_classified_results.lkml"
+    public: false
+
+    dimensions:
+      # The LookML view has no unique key. Cube requires a primary key, so one is
+      # synthesised from the row grain (one row per query_id + article_rank).
+      - name: id
+        sql: "{CUBE}.query_id || '-' || COALESCE(CAST({CUBE}.article_rank AS VARCHAR), 'none')"
+        type: string
+        primary_key: true
+        public: false
+
+      - name: article_id
+        sql: article_id
+        type: string
+        public: false
+
+      - name: query_id
+        sql: query_id
+        type: string
+        public: false
+
+      - name: version_id
+        sql: version_id
+        type: string
+        public: false
+
+      - name: article_rank
+        sql: article_rank
+        type: number
+
+      - name: article_title
+        sql: article_title
+        type: string
+
+      - name: created_at
+        sql: created_at
+        type: time
+
+      - name: created_execution_date
+        sql: created_execution_date
+        type: time
+
+      - name: etl_created_at
+        sql: etl_created_at
+        type: time
+        public: false
+
+      - name: query_length
+        sql: query_length
+        type: number
+
+      - name: search_query
+        sql: "trim(lower({CUBE}.search_query))"
+        type: string
+
+      - name: similarity_score
+        sql: similarity_score
+        type: number
+        meta:
+          value_format: decimal_2
+
+      - name: subtopic
+        sql: subtopic
+        type: string
+
+      - name: topic
+        sql: topic
+        type: string
+
+      - name: is_zero_result
+        sql: "CASE WHEN {CUBE}.article_id IS NULL THEN 'yes' ELSE 'no' END"
+        type: string
+
+      - name: search_query_word_count
+        sql: "cardinality(regexp_extract_all({CUBE.search_query}, '[^ ]+'))"
+        type: number
+
+      - name: word_count_bucket
+        sql: >
+          CASE
+            WHEN {CUBE.search_query_word_count} = 1 THEN '1 word'
+            WHEN {CUBE.search_query_word_count} = 2 THEN '2 words'
+            WHEN {CUBE.search_query_word_count} BETWEEN 3 AND 4 THEN '3-4 words'
+            WHEN {CUBE.search_query_word_count} >= 5 THEN '5+ words'
+            ELSE 'unknown'
+          END
+        type: string
+
+      - name: similarity_score_distribution
+        sql: "ROUND({CUBE.similarity_score}, 2)"
+        type: number
+        meta:
+          value_format: decimal_2
+
+      # CASE wrapper: Cube's filter appends `= CAST(? AS BOOLEAN)` in the sql, which otherwise binds to
+      # the last OR operand only. Also, chr(63) avoids a literal '?' being read as a bind placeholder.
+      - name: is_search_query_a_question
+        sql: >
+          CASE WHEN REGEXP_LIKE({CUBE.search_query},
+          '^(who|what|where|when|why|which|whose|whom|how|is|am|are|was|were|do|does|did|has|have|had|can|could|will|would|should|may|might|shall|must)($|[^a-z])')
+          OR strpos({CUBE}.search_query, chr(63)) > 0
+          THEN TRUE ELSE FALSE END
+        type: boolean
+
+    measures:
+      - name: total_searches
+        sql: query_id
+        type: count_distinct
+
+      - name: total_results_count
+        type: count
+        filters:
+          - sql: "{CUBE}.article_id IS NOT NULL"
+
+      - name: unique_article_count
+        sql: article_id
+        type: count_distinct
+
+      - name: zero_result_searches
+        sql: query_id
+        type: count_distinct
+        filters:
+          - sql: "{CUBE}.article_id IS NULL"
+
+      - name: zero_result_rate
+        sql: "1.0 * {CUBE.zero_result_searches} / NULLIF({CUBE.total_searches}, 0)"
+        type: number
+        format: percent
+        meta:
+          value_format: percent_2
+
+      - name: active_days
+        sql: "date_trunc('day', {CUBE}.created_at)"
+        type: count_distinct
+        public: false
+
+      - name: avg_searches_per_day
+        sql: "1.0 * {CUBE.total_searches} / NULLIF({CUBE.active_days}, 0)"
+        type: number
+        meta:
+          value_format: decimal_0
+
+      - name: avg_article_rank
+        sql: article_rank
+        type: avg
+        filters:
+          - sql: "{CUBE}.article_id IS NOT NULL"
+        meta:
+          value_format: decimal_2
