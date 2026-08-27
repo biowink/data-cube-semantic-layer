@@ -4,7 +4,7 @@ WITH day_zero AS (
         first_seen,
         first_platform,
         MIN(CASE WHEN mobile_event_name = 'Did Create Account' THEN derived_tstamp END) AS create_account_ts,
-        MIN(CASE WHEN mobile_event_name = 'Open Data Entry' THEN derived_tstamp END) AS open_data_entry_ts,
+        MIN(CASE WHEN mobile_event_name IN ('Open Data Entry', 'Show Tracking Block Modal') THEN derived_tstamp END) AS open_data_entry_ts,
         MAX(CASE
                 WHEN mobile_event_name = 'Exit Data Entry' AND
                      CASE WHEN JSON_EXTRACT_PATH_TEXT(LOWER(event_properties), 'number of added data points') != ''
@@ -25,7 +25,7 @@ WITH day_zero AS (
         DATEDIFF('day', first_seen, derived_tstamp) = 0
         AND derived_tstamp >= '2022-11-01'
         AND first_seen >= '2022-11-01'
-        AND mobile_event_name IN ('Did Create Account', 'Exit Data Entry', 'Open Data Entry')
+        AND mobile_event_name IN ('Did Create Account', 'Exit Data Entry', 'Open Data Entry', 'Show Tracking Block Modal')
     GROUP BY 1, 2, 3
 )
 SELECT first_seen::DATE AS date,

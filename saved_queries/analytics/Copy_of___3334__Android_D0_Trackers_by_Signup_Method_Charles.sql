@@ -1,12 +1,13 @@
-SELECT DATE_TRUNC('day', account_created_at) AS date,
+SELECT major_app_version,
 did_create_account_method = 'email' AS email_signup,
     COUNT(DISTINCT CASE WHEN DATE_DIFF('day', account_created_at, exit_data_entry_saving_ts) = 0 THEN users.analytics_id END) * 1.0/COUNT(DISTINCT users.analytics_id) AS d1_retention_rate
 FROM der.users
 INNER JOIN user_metrics.user_onboarding_funnel ON users.analytics_id = user_onboarding_funnel.analytics_id
 WHERE account_created_at >= DATE '2024-11-01'
-    AND account_created_at < CURRENT_DATE - INTERVAL '2' DAY
+    AND account_created_at < CURRENT_DATE - INTERVAL '1' DAY
     AND user_onboarding_funnel.platform = 'android'
     AND did_create_account_method IS NOT NULL
+    AND major_app_version > 185
 GROUP BY 1, 2
 ORDER BY 1, 2
 ;

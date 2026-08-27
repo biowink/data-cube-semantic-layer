@@ -1,0 +1,205 @@
+-- CREATE TABLE IF NOT EXISTS intermediate.backend_tiktok_san_campaign_performance (
+--     date date,
+--     network string,
+--     campaign string,
+--     adgroup string,
+--     creative string,
+--     country_code string,
+--     country string,
+--     platform string,
+--     d0_backend_created_account_conversions int,
+--     d0_backend_free_trial_conversions int,
+--     d0_backend_1m_subscription_conversions int,
+--     d0_backend_1m_subscription_revenue double,
+--     d0_backend_12m_subscription_conversions int,
+--     d0_backend_12m_subscription_revenue double,
+--     d0_backend_partner_subscription_conversions int,
+--     d0_backend_partner_subscription_revenue double,
+--     d7_backend_created_account_conversions int,
+--     d7_backend_free_trial_conversions int,
+--     d7_backend_1m_subscription_conversions int,
+--     d7_backend_1m_subscription_revenue double,
+--     d7_backend_12m_subscription_conversions int,
+--     d7_backend_12m_promo_subscription_conversions int,
+--     d7_backend_12m_subscription_revenue double,
+--     d7_backend_partner_subscription_conversions int,
+--     d7_backend_partner_subscription_revenue double
+--     )
+--     LOCATION 's3://clue-data-prod-athena-iceberg-storage/iceberg/intermediate/backend_tiktok_san_campaign_performance'
+--     TBLPROPERTIES (
+--     'table_type'='iceberg'
+-- );
+
+-- DELETE FROM intermediate.backend_tiktok_san_campaign_performance;
+
+-- INSERT INTO intermediate.backend_tiktok_san_campaign_performance (
+--     date,
+--     network,
+--     campaign,
+--     adgroup,
+--     creative,
+--     country_code,
+--     country,
+--     platform,
+--     d0_backend_created_account_conversions,
+--     d0_backend_free_trial_conversions,
+--     d0_backend_1m_subscription_conversions,
+--     d0_backend_1m_subscription_revenue,
+--     d0_backend_12m_subscription_conversions,
+--     d0_backend_12m_subscription_revenue,
+--     d0_backend_partner_subscription_conversions,
+--     d0_backend_partner_subscription_revenue,
+--     d7_backend_created_account_conversions,
+--     d7_backend_free_trial_conversions,
+--     d7_backend_1m_subscription_conversions,
+--     d7_backend_1m_subscription_revenue,
+--     d7_backend_12m_subscription_conversions,
+--     d7_backend_12m_promo_subscription_conversions,
+--     d7_backend_12m_subscription_revenue,
+--     d7_backend_partner_subscription_conversions,
+--     d7_backend_partner_subscription_revenue
+-- )
+-- WITH user_level_aggregate AS (
+-- SELECT
+--     backend_adjust_trackers.user_id,
+
+--     DATE_TRUNC('day', install_time) AS date,
+--     backend_adjust_trackers.tracker_name AS network,
+--     'unknown' AS campaign,
+--     'unknown' AS adgroup,
+--     'unknown' AS creative,
+--     UPPER(user_first_session_attributes.country_code) AS country_code,
+--     user_first_session_attributes.country_name AS country,
+--     user_first_session_attributes.platform,
+
+--     -- d0
+--     MAX(CASE WHEN CAST(users.backend_created_at AS DATE) = CAST(install_time AS DATE) THEN 1 ELSE 0 END)
+--         AS d0_created_account_conversion,
+--     MAX(CASE WHEN all_subscriptions_events.subscription_type = 'Subscription Free Trial'
+--               AND CAST(all_subscriptions_events.backend_created_at AS DATE) = CAST(install_time AS DATE)
+--               THEN 1 ELSE 0 END
+--         ) AS d0_free_trial_conversion,
+--     MAX(CASE WHEN all_subscriptions_events.subscription_type = 'Subscription Purchased'
+--               AND all_subscriptions_events.subscription_duration = 1
+--               AND CAST(all_subscriptions_events.backend_created_at AS DATE) = CAST(install_time AS DATE)
+--               THEN 1 ELSE 0 END
+--         ) AS d0_1m_subscription_conversion,
+--     SUM(CASE WHEN all_subscriptions_events.subscription_type = 'Subscription Purchased'
+--               AND all_subscriptions_events.subscription_duration = 1
+--               AND CAST(all_subscriptions_events.backend_created_at AS DATE) = CAST(install_time AS DATE)
+--               THEN gross_sales_euro ELSE 0 END
+--         ) AS d0_1m_subscription_revenue,
+--     MAX(CASE WHEN all_subscriptions_events.subscription_type = 'Subscription Purchased'
+--               AND all_subscriptions_events.subscription_duration = 12
+--               AND CAST(all_subscriptions_events.backend_created_at AS DATE) = CAST(install_time AS DATE)
+--               THEN 1 ELSE 0 END
+--         ) AS d0_12m_subscription_conversion,
+--     SUM(CASE WHEN all_subscriptions_events.subscription_type = 'Subscription Purchased'
+--               AND all_subscriptions_events.subscription_duration = 12
+--               AND CAST(all_subscriptions_events.backend_created_at AS DATE) = CAST(install_time AS DATE)
+--               THEN gross_sales_euro ELSE 0 END
+--         ) AS d0_12m_subscription_revenue,
+--     MAX(CASE WHEN all_subscriptions_events.subscription_type = 'Subscription Granted'
+--               AND CAST(all_subscriptions_events.backend_created_at AS DATE) = CAST(install_time AS DATE)
+--               THEN 1 ELSE 0 END
+--         ) AS d0_partner_subscription_conversion,
+--     SUM(CASE WHEN all_subscriptions_events.subscription_type = 'Subscription Payable Action'
+--               AND CAST(all_subscriptions_events.backend_created_at AS DATE) = CAST(install_time AS DATE)
+--               THEN gross_sales_euro ELSE 0 END
+--         ) AS d0_partner_subscription_revenue,
+
+--     -- d7
+--     MAX(CASE WHEN users.backend_created_at BETWEEN install_time AND install_time + INTERVAL '7' day
+--               THEN 1 ELSE 0 END
+--         ) AS d7_created_account_conversion,
+--     MAX(CASE WHEN all_subscriptions_events.subscription_type = 'Subscription Free Trial'
+--               AND DATE_DIFF('day', CAST(users.backend_created_at AS DATE), CAST(all_subscriptions_events.backend_created_at AS DATE)) BETWEEN 0 and 7
+--               THEN 1 ELSE 0 END
+--         ) AS d7_free_trial_conversion,
+--     MAX(CASE WHEN all_subscriptions_events.subscription_type = 'Subscription Purchased'
+--               AND all_subscriptions_events.subscription_duration = 1
+--               AND DATE_DIFF('day', CAST(users.backend_created_at AS DATE), CAST(all_subscriptions_events.backend_created_at AS DATE)) BETWEEN 0 and 7
+--               THEN 1 ELSE 0 END
+--         ) AS d7_1m_subscription_conversion,
+--     SUM(CASE WHEN all_subscriptions_events.subscription_type = 'Subscription Purchased'
+--               AND all_subscriptions_events.subscription_duration = 1
+--               AND DATE_DIFF('day', CAST(users.backend_created_at AS DATE), CAST(all_subscriptions_events.backend_created_at AS DATE)) BETWEEN 0 and 7
+--               THEN gross_sales_euro ELSE 0 END
+--         ) AS d7_1m_subscription_revenue,
+--     MAX(CASE WHEN all_subscriptions_events.subscription_type = 'Subscription Purchased'
+--               AND all_subscriptions_events.subscription_duration = 12
+--               AND DATE_DIFF('day', CAST(users.backend_created_at AS DATE), CAST(all_subscriptions_events.backend_created_at AS DATE)) BETWEEN 0 and 7
+--               THEN 1 ELSE 0 END
+--         ) AS d7_12m_subscription_conversion,
+--     MAX(CASE WHEN all_subscriptions_events.subscription_type = 'Subscription Purchased'
+--               AND all_subscriptions_events.subscription_duration = 12
+--               AND all_subscriptions_events.is_in_intro_offer_period = TRUE
+--               AND DATE_DIFF('day', CAST(users.backend_created_at AS DATE), CAST(all_subscriptions_events.backend_created_at AS DATE)) BETWEEN 0 and 7
+--               THEN 1 ELSE 0 END
+--         ) AS d7_12m_promo_subscription_conversion,
+--     SUM(CASE WHEN all_subscriptions_events.subscription_type = 'Subscription Purchased'
+--               AND all_subscriptions_events.subscription_duration = 12
+--               AND DATE_DIFF('day', CAST(users.backend_created_at AS DATE), CAST(all_subscriptions_events.backend_created_at AS DATE)) BETWEEN 0 and 7
+--               THEN gross_sales_euro ELSE 0 END
+--         ) AS d7_12m_subscription_revenue,
+--     MAX(CASE WHEN all_subscriptions_events.subscription_type = 'Subscription Granted'
+--               AND DATE_DIFF('day', CAST(users.backend_created_at AS DATE), CAST(all_subscriptions_events.backend_created_at AS DATE)) BETWEEN 0 and 7
+--               THEN 1 ELSE 0 END
+--         ) AS d7_partner_subscription_conversion,
+--     SUM(CASE WHEN all_subscriptions_events.subscription_type = 'Subscription Payable Action'
+--               AND DATE_DIFF('day', CAST(users.backend_created_at AS DATE), CAST(all_subscriptions_events.backend_created_at AS DATE)) BETWEEN 0 and 7
+--               THEN gross_sales_euro ELSE 0 END
+--         ) AS d7_partner_subscription_revenue
+
+-- FROM der.backend_adjust_trackers
+-- JOIN import.users
+--     ON (backend_adjust_trackers.user_id = users.user_id)
+-- LEFT JOIN user_metrics.user_first_session_attributes
+--     ON (users.analytics_id = user_first_session_attributes.analytics_id)
+-- LEFT JOIN der.all_subscriptions_events
+--     ON (users.analytics_id = all_subscriptions_events.analytics_id
+--         AND (all_subscriptions_events.subscription_type IN ('Subscription Free Trial', 'Subscription Purchased')
+--              OR all_subscriptions_events.subscription_type IN ('Subscription Granted', 'Subscription Payable Action') AND partner IS NOT NULL)
+--         AND all_subscriptions_events.backend_created_at BETWEEN backend_adjust_trackers.install_time AND backend_adjust_trackers.install_time + INTERVAL '120' day)
+-- WHERE backend_adjust_trackers.tracker_name = 'TikTok SAN'
+-- GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9
+-- )
+
+-- SELECT
+--     date,
+--     network,
+--     campaign,
+--     adgroup,
+--     creative,
+--     country_code,
+--     country,
+--     platform,
+--     SUM(d0_created_account_conversion) AS d0_backend_created_account_conversions,
+--     SUM(d0_free_trial_conversion) AS d0_backend_free_trial_conversions,
+--     SUM(d0_1m_subscription_conversion) AS d0_backend_1m_subscription_conversions,
+--     SUM(d0_1m_subscription_revenue) AS d0_backend_1m_subscription_revenue,
+--     SUM(d0_12m_subscription_conversion) AS d0_backend_12m_subscription_conversions,
+--     SUM(d0_12m_subscription_revenue) AS d0_backend_12m_subscription_revenue,
+--     SUM(d0_partner_subscription_conversion) AS d0_backend_partner_subscription_conversions,
+--     SUM(d0_partner_subscription_revenue) AS d0_backend_partner_subscription_revenue,
+--     SUM(d7_created_account_conversion) AS d7_backend_created_account_conversions,
+--     SUM(d7_free_trial_conversion) AS d7_backend_free_trial_conversions,
+--     SUM(d7_1m_subscription_conversion) AS d7_backend_1m_subscription_conversions,
+--     SUM(d7_1m_subscription_revenue) AS d7_backend_1m_subscription_revenue,
+--     SUM(d7_12m_subscription_conversion) AS d7_backend_12m_subscription_conversions,
+--     SUM(d7_12m_promo_subscription_conversion) as d7_backend_12m_promo_subscription_conversions,
+--     SUM(d7_12m_subscription_revenue) AS d7_backend_12m_subscription_revenue,
+--     SUM(d7_partner_subscription_conversion) AS d7_backend_partner_subscription_conversions,
+--     SUM(d7_partner_subscription_revenue) AS d7_backend_partner_subscription_revenue
+
+-- FROM user_level_aggregate
+-- GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
+-- ;
+
+select 
+    date_trunc('month', date),
+    platform,
+    sum(d0_backend_created_account_conversions) as d0ac,
+    sum(d7_backend_12m_subscription_conversions) as d7conv
+from intermediate.backend_tiktok_san_campaign_performance
+group by 1, 2 order by 1, 2

@@ -1,0 +1,2 @@
+select country, price_bucket
+FROM intermediate.subscriptions_retentions_copy
