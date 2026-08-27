@@ -1,0 +1,1 @@
+SELECT * FROM der.sp_sessions LIMIT 100;
