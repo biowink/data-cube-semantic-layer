@@ -1,29 +1,6 @@
-# Cube data model — migrated from the Looker view `adjust_campaign_performance`.
-# Source: der.adjust_campaign_performance
-#
-# Converted mechanically field-by-field: ${TABLE} -> {CUBE}, ${other_field} -> {other_field},
-# label -> title, group_label -> meta.looker_group_label, value_format_name -> meta.looker_value_format
-# (+ format: percent where applicable), hidden: yes -> public: false, filters: [...] -> filters: [{sql: ...}].
-#
-# NOT included below — these relied on Looker parameters (dynamic pickers), which have no direct
-# equivalent in a plain Cube YAML schema. See the "Dynamic Fields" note at the end of this file.
-#   - parameters: granularity_selector, dimension_selector, metric_selector, paid_user_estimate
-#   - fields driven by them: dynamic_date, dynamic_user_dimension, dynamic_rate_metric,
-#     dynamic_spend_metric, paid_user_input
-#
 cubes:
   - name: adjust_campaign_performance
     sql_table: der.adjust_campaign_performance
-
-    # NOTE: no natural primary key was declared on the Looker view. Cube works without
-    # one for simple aggregations, but a primary_key dimension is needed for joins and for
-    # some pre-aggregation features. Confirm the true grain of der.adjust_campaign_performance (looks like
-    # date + network + campaign + adgroup + creative + platform) and either expose an existing
-    # surrogate key column, or add one, e.g.:
-    # - name: id
-    #   sql: "{CUBE}.date || '|' || {CUBE}.network || '|' || {CUBE}.campaign || '|' || {CUBE}.adgroup || '|' || {CUBE}.creative || '|' || {CUBE}.platform"
-    #   type: string
-    #   primary_key: true
 
     dimensions:
     # Dates
@@ -1481,32 +1458,3 @@ cubes:
           CAST({total_skad_d0_conversions} AS DOUBLE) / NULLIF({skad_installs},0)
         type: number
         format: percent
-
-# ---------------------------------------------------------------------------
-# Dynamic Fields — needs a manual decision, not auto-converted
-# ---------------------------------------------------------------------------
-# The Looker view used four `parameter` blocks to let a dashboard viewer pick a granularity,
-# a breakdown dimension, or a metric from a dropdown, and had dimensions/measures whose SQL
-# branched on that pick via Liquid (). Cube's plain YAML schema has no equivalent
-# of a Looker parameter — there's no built-in "pick a field at query time" control.
-#
-# The good news: every option those pickers could switch to is already a normal, separate
-# dimension or measure in this file (network, campaign, market_3, country, adgroup, creative,
-# platform, source_type, optimisation_goal, region for dimension_selector; installs, clicks,
-# impressions, the D0/D7 conversion + rate measures, ad_spend, CPC, CPI, CPM, CPR, CPD0C, CPFT,
-# predicted_d360_cac, predicted_d360_ltv_to_cac_ratio, d7_roas, d30_roas for metric_selector).
-# So no analysis is lost — the difference is just that in Metabase, someone picks the field
-# directly (as a column / summarize-by choice) instead of via a Looker-style dropdown parameter.
-#
-# Field-by-field:
-#   - granularity_selector + dynamic_date  -> not needed: the `date` time dimension above
-#     already supports day/week/month/quarter granularity natively in any Cube-aware BI tool.
-#   - dimension_selector + dynamic_user_dimension -> use the underlying dimension directly
-#     (network, campaign, market_3, country, adgroup, creative, platform, source_type,
-#     optimisation_goal, or region).
-#   - metric_selector + dynamic_rate_metric / dynamic_spend_metric -> use the underlying
-#     measure directly (see list above).
-#   - paid_user_estimate + paid_user_input -> this was a free-text numeric input Looker
-#     injected into a query at run time. Cube has no query-time user input in the YAML schema;
-#     if this is still needed, it would have to become a Metabase question-level parameter/filter
-#     (native SQL question) rather than a cube member — flagging for you to confirm it is still used.
