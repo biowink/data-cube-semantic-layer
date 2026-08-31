@@ -1,1 +1,0 @@
-select * FROM rep.ratings where country = 'us' and app = 'clue' and date >= '2023-01-01' limit 50;

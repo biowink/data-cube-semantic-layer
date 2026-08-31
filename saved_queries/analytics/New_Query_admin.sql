@@ -1,1 +1,0 @@
-select * from dev.athena_query_history limit 1
