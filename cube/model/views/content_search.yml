@@ -7,8 +7,6 @@ views:
         includes: "*"
         excludes:
           - id
-          - article_id
-          - query_id
           - version_id
           - etl_created_at
           - active_days
