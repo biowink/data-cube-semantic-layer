@@ -16,12 +16,10 @@ cubes:
       - name: article_id
         sql: article_id
         type: string
-        public: false
 
       - name: query_id
         sql: query_id
         type: string
-        public: false
 
       - name: version_id
         sql: version_id
