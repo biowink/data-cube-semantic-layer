@@ -1,0 +1,238 @@
+views:
+  - name: adjust
+
+    cubes:
+      - join_path: adjust_campaign_performance
+        includes: "*"
+        excludes:
+          - ad_spend_d7
+          - ad_spend_d14
+          - ad_spend_d30
+          - ad_spend_d120
+          - ad_spend_d360
+          - ad_spend_usd
+
+    folders:
+      - name: "Market"
+        includes:
+          - country
+          - country_code
+          - market
+          - market_3
+          - region
+
+      - name: "Campaign"
+        includes:
+          - campaign
+          - adgroup
+          - content_category
+          - creative
+          - campaign_without_id
+          - adgroup_without_id
+          - creative_without_id
+          - campaign_goal
+          - optimisation_goal
+
+      - name: "Creative Fields"
+        includes:
+          - creative_without_group
+          - creative_language
+          - creative_app_mode
+          - creative_style
+          - creative_topic
+          - creative_details
+          - creative_dimensions
+          - creative_creator
+          - creative_batch
+
+      - name: "Network"
+        includes:
+          - network
+          - raw_network
+          - source_type
+          - network_group
+          - network_group_without_owned
+
+      - name: "Installs"
+        includes:
+          - adjust_installs
+          - skad_installs
+          - skad_reinstalls
+          - limit_ad_tracking_installs
+
+      - name: "Age Events"
+        includes:
+          - age_above_44_events
+          - age_below_30_events
+          - age_between_30_and_44_events
+
+      - name: "Upper Funnel Metrics"
+        includes:
+          - sessions
+          - impressions
+          - clicks
+
+      - name: "Conversions - Day 0 Cohort"
+        includes:
+          - d0_created_account_conversions
+          - d0_free_trial_conversions
+          - d0_1m_subscription_conversions
+          - d0_1m_subscription_revenue
+          - d0_12m_subscription_conversions
+          - d0_12m_subscription_revenue
+          - d0_partner_subscription_conversions
+          - d0_partner_subscription_revenue
+          - total_d0_subscription_conversions
+          - total_d0_revenue
+
+      - name: "Conversions - Day 7 Cohort"
+        includes:
+          - d7_created_account_conversions
+          - d7_free_trial_conversions
+          - d7_1m_subscription_conversions
+          - d7_1m_subscription_revenue
+          - d7_12m_subscription_conversions
+          - d7_12m_subscription_revenue
+          - d7_partner_subscription_conversions
+          - d7_partner_subscription_revenue
+          - total_d7_paid_conversions
+          - total_d7_revenue
+          - paid_d7_revenue
+          - d7_roas
+          - paid_d7_roas
+
+      - name: "Conversions - Day 14 Cohort"
+        includes:
+          - d14_created_account_conversions
+          - d14_free_trial_conversions
+          - d14_1m_subscription_conversions
+          - d14_1m_subscription_revenue
+          - d14_12m_subscription_conversions
+          - d14_12m_subscription_revenue
+          - d14_partner_subscription_conversions
+          - d14_partner_subscription_revenue
+          - total_d14_paid_conversions
+          - total_d14_revenue
+          - paid_d14_revenue
+          - d14_roas
+          - paid_d14_roas
+
+      - name: "Conversions - Day 30 Cohort"
+        includes:
+          - d30_created_account_conversions
+          - d30_free_trial_conversions
+          - d30_1m_subscription_conversions
+          - d30_1m_subscription_revenue
+          - d30_12m_subscription_conversions
+          - d30_12m_subscription_revenue
+          - d30_partner_subscription_conversions
+          - d30_partner_subscription_revenue
+          - total_d30_paid_conversions
+          - total_d30_revenue
+          - d30_roas
+
+      - name: "Conversions - Day 120 Cohort"
+        includes:
+          - d120_created_account_conversions
+          - d120_free_trial_conversions
+          - d120_1m_subscription_conversions
+          - d120_1m_subscription_revenue
+          - d120_12m_subscription_conversions
+          - d120_12m_subscription_revenue
+          - d120_partner_subscription_conversions
+          - d120_partner_subscription_revenue
+          - total_d120_paid_conversions
+          - total_d120_revenue
+          - d120_roas
+
+      - name: "Conversions - Day 360 Cohort"
+        includes:
+          - d360_created_account_conversions
+          - d360_free_trial_conversions
+          - d360_1m_subscription_conversions
+          - d360_1m_subscription_revenue
+          - d360_12m_subscription_conversions
+          - d360_12m_subscription_revenue
+          - d360_partner_subscription_conversions
+          - d360_partner_subscription_revenue
+          - total_d360_paid_conversions
+          - total_d360_revenue
+          - d360_roas
+
+      - name: "SKAdNetwork"
+        includes:
+          - skad_installs
+          - skad_reinstalls
+          - skad_event_1_conversions
+          - skad_event_2_conversions
+          - skad_event_3_conversions
+          - skad_event_4_conversions
+          - skad_event_5_conversions
+          - skad_event_6_conversions
+          - total_skad_d0_conversions
+          - skad_coarse_conversion_values_null_0
+          - skad_coarse_conversion_values_none_0
+          - skad_coarse_conversion_values_low_0
+          - skad_coarse_conversion_values_medium_0
+          - skad_coarse_conversion_values_high_0
+          - skad_coarse_conversion_values_null_1
+          - skad_coarse_conversion_values_none_1
+          - skad_coarse_conversion_values_low_1
+          - skad_coarse_conversion_values_medium_1
+          - skad_coarse_conversion_values_high_1
+          - skad_coarse_conversion_values_null_2
+          - skad_coarse_conversion_values_none_2
+          - skad_coarse_conversion_values_low_2
+          - skad_coarse_conversion_values_medium_2
+          - skad_coarse_conversion_values_high_2
+          - network_ad_spend_skan
+
+      - name: "Adjust-Reported Conversions"
+        includes:
+          - adjust_d0_created_account_conversions
+          - adjust_d0_free_trial_conversions
+          - adjust_d0_1m_subscription_conversions
+          - adjust_d0_12m_subscription_conversions
+          - total_adjust_d0_conversions
+          - adjust_d7_created_account_conversions
+          - adjust_d7_free_trial_conversions
+          - adjust_d7_1m_subscription_conversions
+          - adjust_d7_12m_subscription_conversions
+
+      - name: "Cost Per Metrics"
+        includes:
+          - CPM
+          - CPC
+          - CPI
+          - CPR
+          - CPFT
+          - CPD0C
+          - CPD7PC
+
+      - name: "LTV:CAC Metrics"
+        includes:
+          - predicted_d360_conversions
+          - predicted_d360_total_ltv
+          - paid_predicted_d360_total_ltv
+          - d360_d7_ccm
+          - d360_d0_ccm
+          - predicted_d360_cac
+          - predicted_d360_ltv
+          - predicted_d360_ltv_to_cac_ratio
+          - predicted_d360_paid_ltv_to_cac_ratio
+
+      - name: "Conversion Rate"
+        includes:
+          - click_through_rate
+          - cvr_to_install
+          - adjust_d0_conversion_rate_to_registration
+          - adjust_d0_conversion_rate
+          - adjust_d7_conversion_rate
+          - skad_d0_conversion_rate
+
+      - name: "Custom Date Fields"
+        includes:
+          - month_name
+          - day_of_week
+          - day_of_month
+          - day_of_year
