@@ -1,0 +1,26 @@
+WITH total_discharge_days AS (
+    SELECT COUNT(*) AS count_discharge_days
+    FROM der.backend_tracking
+    INNER JOIN user_metrics.user_last_optional_consent_status USING (analytics_id)
+    WHERE
+        backend_updated_at BETWEEN DATE '2024-10-30' AND DATE '2025-10-30'
+        AND revision_type = 'measurements_tracked'
+        AND category = 'discharge'
+        AND consent_health_analytics_revoke_ts IS NULL
+        AND consent_usage_analytics_revoke_ts IS NULL
+)
+SELECT
+    type,
+    COUNT(*) AS count_discharge_days,
+    COUNT(*) * 1.0/(SELECT count_discharge_days FROM total_discharge_days) AS share_discharge_days
+FROM der.backend_tracking
+INNER JOIN user_metrics.user_last_optional_consent_status USING (analytics_id)
+WHERE
+    backend_updated_at BETWEEN DATE '2024-10-30' AND DATE '2025-10-30'
+    AND revision_type = 'measurements_tracked'
+    AND category = 'discharge'
+    AND consent_health_analytics_revoke_ts IS NULL
+    AND consent_usage_analytics_revoke_ts IS NULL
+GROUP BY 1
+ORDER BY 2 DESC
+;
