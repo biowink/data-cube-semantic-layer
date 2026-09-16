@@ -1,0 +1,134 @@
+cubes:
+  - name: derived_optimizer_metrics
+    sql_table: dev.derived_optimizer_metrics
+    description: "Optimizer metrics"
+
+    dimensions:
+      - name: id
+        sql: "CONCAT(CAST({CUBE}.captured_at AS VARCHAR), '|', {CUBE}.database_name, '|', {CUBE}.table_name, '|', {CUBE}.optimizer_type, '|', CAST({CUBE}.last_run_start AS VARCHAR))"
+        type: string
+        primary_key: true
+        public: false
+
+      # dimension_group: captured_at (timeframes: raw, time, hour, date, month, year)
+      # -> all native Cube granularities, so a single time dimension covers them.
+      - name: captured_at
+        title: "Captured Date"
+        sql: "CAST({CUBE}.captured_at AS TIMESTAMP)"
+        type: time
+
+      - name: database_name
+        sql: database_name
+        type: string
+
+      - name: table_name
+        sql: table_name
+        type: string
+
+      - name: full_table_name
+        sql: "CONCAT({CUBE}.database_name, '.', {CUBE}.table_name)"
+        type: string
+
+      # NOTE: mirrors the original LookML - this dimension is named last_run_end
+      # but is sourced from the last_run_status column (naming quirk in the
+      # source view), preserved here for parity.
+      - name: last_run_end
+        sql: last_run_status
+        type: string
+
+      - name: last_run_end_date
+        sql: "CAST({CUBE}.last_run_end_date AS TIMESTAMP)"
+        type: time
+
+      - name: optimizer_type
+        sql: optimizer_type
+        type: string
+
+      # dimension_group: last_run_start (timeframes: raw, time, date)
+      # -> all native Cube granularities, so a single time dimension covers them.
+      - name: last_run_start
+        sql: "CAST({CUBE}.last_run_start AS TIMESTAMP)"
+        type: time
+
+      - name: job_duration_hours
+        title: "Job Duration (Hours)"
+        sql: job_duration_hours
+        type: number
+        meta:
+          format: decimal_2
+
+      - name: bytes_compacted_gb
+        title: "GB Compacted"
+        sql: "{CUBE}.bytes_compacted / 1073741824.0"
+        type: number
+        meta:
+          format: decimal_2
+
+      - name: bytes_compacted_raw
+        sql: bytes_compacted
+        type: number
+        public: false
+
+      - name: files_compacted
+        title: "Files Compacted"
+        sql: files_compacted
+        type: number
+        meta:
+          format: decimal_0
+
+      - name: num_dpus
+        title: "Num DPUs"
+        sql: num_dpus
+        type: number
+
+      - name: dpu_hours_raw
+        sql: dpu_hours
+        type: number
+        public: false
+
+    measures:
+      - name: compaction_run_count
+        title: "# Compaction Runs"
+        type: count
+
+      - name: total_bytes_compacted_gb
+        title: "Total GB Compacted"
+        sql: "SUM({CUBE}.bytes_compacted) / 1073741824.0"
+        type: number
+        meta:
+          format: decimal_2
+
+      - name: total_bytes_compacted
+        title: "Total Bytes Compacted"
+        sql: bytes_compacted
+        type: sum
+        meta:
+          format: decimal_0
+
+      - name: total_files_compacted
+        title: "Total Files Compacted"
+        sql: files_compacted
+        type: sum
+        meta:
+          format: decimal_0
+
+      - name: total_job_duration_hours
+        title: "Total Job Duration (Hours)"
+        sql: job_duration_hours
+        type: sum
+        meta:
+          format: decimal_2
+
+      - name: avg_job_duration_hours
+        title: "Avg Job Duration (Hours)"
+        sql: job_duration_hours
+        type: avg
+        meta:
+          format: decimal_2
+
+      - name: total_dpu_hours
+        title: "Total DPU Hours"
+        sql: dpu_hours
+        type: sum
+        meta:
+          format: decimal_2
