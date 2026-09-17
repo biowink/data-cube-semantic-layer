@@ -1,0 +1,155 @@
+cubes:
+  - name: apple_receipts_transactions
+    sql_table: import.apple_receipts_transactions
+    description: "Migrated from views/data_monitoring/apple_receipts_transactions.view.lkml"
+
+    dimensions:
+      - name: analytics_id
+        sql: analytics_id
+        type: string
+
+      - name: app_account_token
+        sql: app_account_token
+        type: string
+
+      - name: backend_subscription_id
+        sql: backend_subscription_id
+        type: string
+
+      - name: backend_transaction_id
+        sql: backend_transaction_id
+        type: string
+
+      - name: bundle_id
+        sql: bundle_id
+        type: string
+
+      - name: currency
+        sql: currency
+        type: string
+
+      - name: environment
+        sql: environment
+        type: string
+
+      # dimension_group: etl_execution (timeframes: raw, date, week, month, quarter, year)
+      # -> all native Cube granularities, so a single time dimension covers them.
+      - name: etl_execution
+        sql: etl_execution_date
+        type: time
+
+      # dimension_group: etl_updated (timeframes: raw, time, date, week, month, quarter, year)
+      # -> all native Cube granularities, so a single time dimension covers them.
+      - name: etl_updated
+        sql: etl_updated_at
+        type: time
+
+      # dimension_group: expires (timeframes: raw, time, date, week, month, quarter, year)
+      # -> all native Cube granularities, so a single time dimension covers them.
+      - name: expires
+        sql: expires_date
+        type: time
+
+      - name: in_app_ownership_type
+        sql: in_app_ownership_type
+        type: string
+
+      - name: is_upgraded
+        sql: is_upgraded
+        type: boolean
+
+      - name: offer_discount_type
+        sql: offer_discount_type
+        type: string
+
+      - name: offer_identifier
+        sql: offer_identifier
+        type: string
+
+      - name: offer_type
+        sql: offer_type
+        type: number
+
+      # dimension_group: original_purchase (timeframes: raw, time, date, week, month, quarter, year)
+      # -> all native Cube granularities, so a single time dimension covers them.
+      - name: original_purchase
+        sql: original_purchase_date
+        type: time
+
+      - name: original_transaction_id
+        sql: original_transaction_id
+        type: string
+
+      - name: price
+        sql: price
+        type: number
+
+      - name: product_id
+        sql: product_id
+        type: string
+
+      # dimension_group: purchase_date (timeframes: raw, time, date, week, month, quarter, year)
+      # -> all native Cube granularities, so a single time dimension covers them.
+      - name: purchase_date
+        sql: purchase_date
+        type: time
+
+      - name: quantity
+        sql: quantity
+        type: number
+
+      # dimension_group: revocation (timeframes: raw, time, date, week, month, quarter, year)
+      # -> all native Cube granularities, so a single time dimension covers them.
+      - name: revocation
+        sql: revocation_date
+        type: time
+
+      - name: revocation_reason
+        sql: revocation_reason
+        type: number
+
+      # dimension_group: signed (timeframes: raw, time, date, week, month, quarter, year)
+      # -> all native Cube granularities, so a single time dimension covers them.
+      - name: signed
+        sql: signed_date
+        type: time
+
+      - name: storefront
+        sql: storefront
+        type: string
+
+      - name: storefront_id
+        sql: storefront_id
+        type: number
+
+      - name: subscription_group_identifier
+        sql: subscription_group_identifier
+        type: string
+
+      - name: transaction_id
+        sql: transaction_id
+        type: string
+
+      - name: transaction_reason
+        sql: transaction_reason
+        type: string
+
+      - name: type
+        sql: type
+        type: string
+
+      - name: web_order_line_item_id
+        sql: web_order_line_item_id
+        type: string
+
+    measures:
+      - name: total_price
+        sql: price
+        type: sum
+
+      - name: average_price
+        sql: price
+        type: avg
+
+      - name: count
+        type: count
