@@ -1,0 +1,44 @@
+cubes:
+  - name: currency_exchange_rates
+    sql_table: rep.currency_exchange_rates
+    description: "Migrated from views/currency_exchange_rates.view.lkml"
+
+    dimensions:
+      # prim_key removed - the source LookML view noted it was only needed for
+      # joins ("this would only be needed if the table is joined with another
+      # table") and isn't a real column on rep.currency_exchange_rates.
+      # Synthesizing a primary key from currency + report date instead.
+      - name: id
+        sql: "CONCAT({CUBE}.currency, '|', CAST({CUBE}.date AS VARCHAR))"
+        type: string
+        primary_key: true
+        public: false
+
+      - name: currency
+        sql: currency
+        type: string
+
+      # dimension_group: report (timeframes: date, week, month, quarter, year, day_of_month)
+      # -> day_of_month has no native Cube granularity, so it's split out below.
+      - name: report
+        sql: date
+        type: time
+
+      - name: report_day_of_month
+        sql: "day({CUBE}.date)"
+        type: number
+
+      - name: is_last_day_of_month
+        sql: "{CUBE}.date = DATE_ADD('day', -1, DATE_TRUNC('month', DATE_ADD('month', 1, {CUBE}.date)))"
+        type: boolean
+
+      - name: rate
+        sql: rate
+        type: number
+
+    measures:
+      - name: count
+        type: count
+
+      # measure: rates (type: list, list_field: rate) has no direct Cube equivalent -
+      # Cube's measure types don't support aggregating values into a list/array.
