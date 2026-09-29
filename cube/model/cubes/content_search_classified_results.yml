@@ -131,6 +131,21 @@ cubes:
         meta:
           value_format: percent_2
 
+      - name: sum_of_total_searches
+        multi_stage: true
+        sql: "{CUBE.total_searches}"
+        type: sum
+        group_by: []
+        public: false
+
+      - name: pct_of_total_searches
+        multi_stage: true
+        sql: "1.0 * {CUBE.total_searches} / NULLIF({CUBE.sum_of_total_searches}, 0)"
+        type: number
+        format: percent
+        meta:
+          value_format: percent_2
+
       - name: active_days
         sql: "date_trunc('day', {CUBE}.created_at)"
         type: count_distinct
