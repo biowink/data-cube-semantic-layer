@@ -10,5 +10,5 @@ views:
           - version_id
           - etl_created_at
           - active_days
-          - total_searches_all_topics
+          - sum_of_total_searches
           
