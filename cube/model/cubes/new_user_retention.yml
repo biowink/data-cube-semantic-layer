@@ -1,0 +1,244 @@
+cubes:
+  - name: new_user_retention
+    sql_table: user_metrics.new_user_retention_metrics
+    description: "Migrated from views/users/new_user_retention.view.lkml"
+
+    dimensions:
+      - name: analytics_id
+        sql: analytics_id
+        type: string
+        primary_key: true
+        public: false
+
+      - name: d60_revoked_usage_consent
+        title: "Revoked Usage Consent (D60)"
+        description: "Whether a user revoked their usage analytics consent in the first 60 days of their account"
+        sql: d60_revoke_usage_analytics_consent
+        type: boolean
+        meta:
+          group_label: "Consents"
+
+      - name: count_m2_sessions
+        title: "Count M2 Sessions"
+        description: "Number of sessions a user had in M2 (Days 31 to 60)"
+        sql: count_m2_sessions
+        type: number
+
+      - name: count_m2_active_days
+        title: "Count M2 Active Days"
+        description: "Number of active days a user had in M2 (Days 31 to 60)"
+        sql: count_m2_active_days
+        type: number
+
+      - name: count_m2_view_subscription_plans
+        title: "Count M2 View Subscription Plans"
+        description: "Number of buy screens a user viewed in M2 (Days 31 to 60)"
+        sql: count_m2_view_subscription_plans
+        type: number
+
+      - name: count_m2_tracking_days
+        title: "Count M2 Tracking Days"
+        description: "Number of days a user used tracking in M2 (Days 31 to 60)"
+        sql: count_m2_tracking_days
+        type: number
+
+      - name: is_m2_mau_retained
+        title: "Is M2 MAU Retained"
+        description: "Whether a user had a session in M2 (Days 31 to 60)"
+        sql: "{CUBE}.count_m2_sessions > 0"
+        type: boolean
+
+#      - name: is_m2_tracking_retained
+#        title: "Is M2 Tracking Retained"
+#        description: "Whether a user created a tracking point in M2 (Days 31 to 60)"
+#        sql: "{CUBE}.count_m2_tracking_points > 0"
+#        type: boolean
+
+      # Weekly retention metrics
+      - name: count_w2_sessions
+        description: "Number of sessions a user had in W2 (Days 8 to 14)"
+        sql: count_w2_sessions
+        type: number
+        meta:
+          group_label: "Count of Sessions by Week"
+
+      - name: count_w3_sessions
+        description: "Number of sessions a user had in W3 (Days 15 to 21)"
+        sql: count_w3_sessions
+        type: number
+        meta:
+          group_label: "Count of Sessions by Week"
+
+      - name: count_w4_sessions
+        description: "Number of sessions a user had in W4 (Days 22 to 28)"
+        sql: count_w4_sessions
+        type: number
+        meta:
+          group_label: "Count of Sessions by Week"
+
+      - name: count_w5_sessions
+        description: "Number of sessions a user had in W5 (Days 29 to 35)"
+        sql: count_w5_sessions
+        type: number
+        meta:
+          group_label: "Count of Sessions by Week"
+
+      - name: count_w6_sessions
+        description: "Number of sessions a user had in W6 (Days 36 to 42)"
+        sql: count_w6_sessions
+        type: number
+        meta:
+          group_label: "Count of Sessions by Week"
+
+      - name: count_w7_sessions
+        description: "Number of sessions a user had in W7 (Days 43 to 49)"
+        sql: count_w7_sessions
+        type: number
+        meta:
+          group_label: "Count of Sessions by Week"
+
+      - name: count_w8_sessions
+        description: "Number of sessions a user had in W8 (Days 50 to 56)"
+        sql: count_w8_sessions
+        type: number
+        meta:
+          group_label: "Count of Sessions by Week"
+
+    # Retention measures: the source wraps AVG() by hand on a type: number measure;
+    # here they're type: avg over the same per-row expression.
+    measures:
+      - name: m2_mau_retention
+        title: "M2 MAU Retention"
+        description: "The share of users with a session in M2 (Days 31 to 60)"
+        sql: "CAST(LEAST({CUBE}.count_m2_sessions, 1) AS DOUBLE)"
+        type: avg
+        meta:
+          format: percent_1
+
+      - name: m2_dau_mau
+        title: "M2 DAU/MAU"
+        description: "The share of days active among users active in M2 (Days 31 to 60)"
+        sql: "CAST(NULLIF({CUBE}.count_m2_active_days, 0) AS DOUBLE) / 30"
+        type: avg
+        meta:
+          format: percent_1
+
+#      - name: m2_tracking_retention
+#        title: "M2 Tracking Retention"
+#        description: "The share of users creating a tracking point in M2 (Days 31 to 60)"
+#        sql: "CAST(LEAST({CUBE}.count_m2_tracking_points, 1) AS DOUBLE)"
+#        type: avg
+#        meta:
+#          format: percent_1
+
+      - name: d1_retention
+        description: "The share of users with a session on D1"
+        sql: "CAST(LEAST({CUBE}.count_d1_sessions, 1) AS DOUBLE)"
+        type: avg
+        meta:
+          format: percent_1
+          group_label: "Daily Retention"
+
+      - name: d2_retention
+        description: "The share of users with a session on D2"
+        sql: "CAST(LEAST({CUBE}.count_d2_sessions, 1) AS DOUBLE)"
+        type: avg
+        meta:
+          format: percent_1
+          group_label: "Daily Retention"
+
+      - name: d3_retention
+        description: "The share of users with a session on D3"
+        sql: "CAST(LEAST({CUBE}.count_d3_sessions, 1) AS DOUBLE)"
+        type: avg
+        meta:
+          format: percent_1
+          group_label: "Daily Retention"
+
+      - name: d4_retention
+        description: "The share of users with a session on D4"
+        sql: "CAST(LEAST({CUBE}.count_d4_sessions, 1) AS DOUBLE)"
+        type: avg
+        meta:
+          format: percent_1
+          group_label: "Daily Retention"
+
+      - name: d5_retention
+        description: "The share of users with a session on D5"
+        sql: "CAST(LEAST({CUBE}.count_d5_sessions, 1) AS DOUBLE)"
+        type: avg
+        meta:
+          format: percent_1
+          group_label: "Daily Retention"
+
+      - name: d6_retention
+        description: "The share of users with a session on D6"
+        sql: "CAST(LEAST({CUBE}.count_d6_sessions, 1) AS DOUBLE)"
+        type: avg
+        meta:
+          format: percent_1
+          group_label: "Daily Retention"
+
+      - name: d7_retention
+        description: "The share of users with a session on D7"
+        sql: "CAST(LEAST({CUBE}.count_d7_sessions, 1) AS DOUBLE)"
+        type: avg
+        meta:
+          format: percent_1
+          group_label: "Daily Retention"
+
+      - name: w2_retention
+        description: "The share of users with a session in W2"
+        sql: "CAST(LEAST({CUBE}.count_w2_sessions, 1) AS DOUBLE)"
+        type: avg
+        meta:
+          format: percent_1
+          group_label: "Weekly Retention"
+
+      - name: w3_retention
+        description: "The share of users with a session in W3"
+        sql: "CAST(LEAST({CUBE}.count_w3_sessions, 1) AS DOUBLE)"
+        type: avg
+        meta:
+          format: percent_1
+          group_label: "Weekly Retention"
+
+      - name: w4_retention
+        description: "The share of users with a session in W4"
+        sql: "CAST(LEAST({CUBE}.count_w4_sessions, 1) AS DOUBLE)"
+        type: avg
+        meta:
+          format: percent_1
+          group_label: "Weekly Retention"
+
+      - name: w5_retention
+        description: "The share of users with a session in W5"
+        sql: "CAST(LEAST({CUBE}.count_w5_sessions, 1) AS DOUBLE)"
+        type: avg
+        meta:
+          format: percent_1
+          group_label: "Weekly Retention"
+
+      - name: w6_retention
+        description: "The share of users with a session in W6"
+        sql: "CAST(LEAST({CUBE}.count_w6_sessions, 1) AS DOUBLE)"
+        type: avg
+        meta:
+          format: percent_1
+          group_label: "Weekly Retention"
+
+      - name: w7_retention
+        description: "The share of users with a session in W7"
+        sql: "CAST(LEAST({CUBE}.count_w7_sessions, 1) AS DOUBLE)"
+        type: avg
+        meta:
+          format: percent_1
+          group_label: "Weekly Retention"
+
+      - name: w8_retention
+        description: "The share of users with a session in W8"
+        sql: "CAST(LEAST({CUBE}.count_w8_sessions, 1) AS DOUBLE)"
+        type: avg
+        meta:
+          format: percent_1
+          group_label: "Weekly Retention"
