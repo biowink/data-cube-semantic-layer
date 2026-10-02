@@ -1,0 +1,93 @@
+cubes:
+  - name: derived_daily_snapshot
+    sql_table: dev.derived_daily_snapshot
+    description: "Migrated from views/data_monitoring/iceberg_optimizer_daily_snapshot.view.lkml"
+    # datagroup_trigger: iceberg_metrics_datagroup has no direct Cube equivalent.
+    # Add a refresh_key here (e.g. every: "1 hour" or a sql-based check) if this
+    # cube needs pre-aggregation/caching refresh behavior.
+
+    dimensions:
+      - name: id
+        sql: "CONCAT(CAST({CUBE}.captured_date AS VARCHAR), '|', {CUBE}.database_name, '|', {CUBE}.table_name, '|', {CUBE}.optimizer_type)"
+        type: string
+        primary_key: true
+        public: false
+
+      - name: captured_date
+        title: "Captured Date"
+        sql: "CAST({CUBE}.captured_date AS TIMESTAMP)"
+        type: time
+
+      - name: database_name
+        sql: database_name
+        type: string
+
+      - name: table_name
+        sql: table_name
+        type: string
+
+      - name: full_table_name
+        sql: "CONCAT({CUBE}.database_name, '.', {CUBE}.table_name)"
+        type: string
+
+      - name: enabled
+        sql: enabled
+        type: boolean
+
+      - name: most_recent_run
+        sql: most_recent_run
+        type: boolean
+
+      - name: optimizer_type
+        sql: optimizer_type
+        type: string
+
+    measures:
+      - name: avg_file_size_mb
+        title: "Avg File Size MB"
+        sql: "SUM({CUBE}.total_size_mb) / NULLIF(SUM({CUBE}.file_count), 0)"
+        type: number
+        meta:
+          format: decimal_2
+
+      - name: total_active_size_mb
+        title: "Total Active Size MB"
+        sql: active_size_mb
+        type: sum
+        meta:
+          format: decimal_2
+
+      - name: total_size_mb
+        title: "Total Size MB"
+        sql: total_size_mb
+        type: sum
+        meta:
+          format: decimal_2
+
+      - name: total_row_count
+        title: "Total Row Count"
+        sql: logical_count
+        type: sum
+        meta:
+          format: decimal_0
+
+      - name: total_file_count
+        title: "Total File Count"
+        sql: file_count
+        type: sum
+        meta:
+          format: decimal_0
+
+      - name: total_partition_count
+        title: "Total Partition Count"
+        sql: partition_count
+        type: sum
+        meta:
+          format: decimal_0
+
+      - name: delete_to_data_ratio
+        title: "Delete-to-Data Ratio (%)"
+        sql: "(SUM(CAST({CUBE}.diff AS DOUBLE)) / NULLIF(SUM({CUBE}.physical_count), 0)) * 100"
+        type: number
+        meta:
+          format: decimal_2

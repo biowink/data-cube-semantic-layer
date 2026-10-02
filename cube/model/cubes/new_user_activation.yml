@@ -1,0 +1,171 @@
+cubes:
+  - name: new_user_activation
+    sql_table: user_metrics.new_user_activation_metrics
+    description: "Migrated from views/users/new_user_activation.view.lkml"
+
+    # The D7/D30 fields are NULLed out for accounts younger than the window, which
+    # needs users.account_created_date - hence the join to users.
+    joins:
+      - name: users
+        relationship: one_to_one
+        sql: "{CUBE}.analytics_id = {users.analytics_id}"
+
+    # Only SQL API users whose security context maps to the "people" group
+    # (via contextToGroups in cube.js) can see or query this cube.
+    access_policy:
+      - group: people
+        member_level:
+          includes: "*"
+
+    dimensions:
+      - name: analytics_id
+        sql: analytics_id
+        type: string
+        primary_key: true
+        public: false
+
+      # helper: not in the original LookML - replaces the repeated
+      # DATE_DIFF('day', DATE(${users.account_created_date}), CURRENT_DATE) expression
+      - name: days_since_account_created
+        sql: "DATE_DIFF('day', DATE({users.account_created_date}), CURRENT_DATE)"
+        type: number
+        public: false
+
+      - name: d30_revoked_usage_consent
+        title: "Revoked Usage Consent (D30)"
+        description: "Whether a user revoked their usage analytics consent in the first 30 days of their account"
+        sql: d30_revoke_usage_analytics_consent
+        type: boolean
+        meta:
+          group_label: "Consents"
+
+      # Sessions
+      - name: count_d0_sessions
+        title: "Count D0 Sessions"
+        description: "Number of sessions a user had Day 0"
+        sql: count_d0_sessions
+        type: number
+        meta:
+          group_label: "Sessions"
+
+      - name: count_d7_sessions
+        title: "Count D7 Sessions"
+        description: "Number of sessions a user had Days 0 to 7"
+        sql: "CASE WHEN {days_since_account_created} > 7 THEN {CUBE}.count_d7_sessions END"
+        type: number
+        meta:
+          group_label: "Sessions"
+
+      - name: count_d30_sessions
+        title: "Count D30 Sessions"
+        description: "Number of sessions a user had Days 0 to 30"
+        sql: "CASE WHEN {days_since_account_created} > 30 THEN {CUBE}.count_d30_sessions END"
+        type: number
+        meta:
+          group_label: "Sessions"
+
+      # Buy Screens
+      - name: count_d0_view_subscription_plans
+        title: "Count D0 View Subscription Plans"
+        description: "Number of buy screens a user viewed Day 0"
+        sql: count_d0_view_subscription_plans
+        type: number
+        meta:
+          group_label: "Buy Screens"
+
+      - name: count_d7_view_subscription_plans
+        title: "Count D7 View Subscription Plans"
+        description: "Number of buy screens a user viewed Days 0 to 7"
+        sql: "CASE WHEN {days_since_account_created} > 7 THEN {CUBE}.count_d7_view_subscription_plans END"
+        type: number
+        meta:
+          group_label: "Buy Screens"
+
+      - name: count_d30_view_subscription_plans
+        title: "Count D30 View Subscription Plans"
+        description: "Number of buy screens a user viewed Days 0 to 30"
+        sql: "CASE WHEN {days_since_account_created} > 30 THEN {CUBE}.count_d30_view_subscription_plans END"
+        type: number
+        meta:
+          group_label: "Buy Screens"
+
+      # Active Days
+      - name: count_d7_active_days
+        title: "Count D7 Active Days"
+        description: "Number of days a user was active Days 0 to 7"
+        sql: "CASE WHEN {days_since_account_created} > 7 THEN {CUBE}.count_d7_active_days END"
+        type: number
+        meta:
+          group_label: "Active Days"
+
+      - name: count_d30_active_days
+        title: "Count D30 Active Days"
+        description: "Number of days a user was active Days 0 to 30"
+        sql: "CASE WHEN {days_since_account_created} > 30 THEN {CUBE}.count_d30_active_days END"
+        type: number
+        meta:
+          group_label: "Active Days"
+
+      # Tracking Points
+      - name: count_d0_tracking_points
+        title: "Count D0 Tracking Points"
+        description: "Number of tracking points a user created Day 0"
+        sql: "{CUBE}.count_d0_tracking_points + {CUBE}.count_d0_fast_tracking_points"
+        type: number
+        meta:
+          group_label: "Tracking Points"
+
+      - name: count_d7_tracking_points
+        title: "Count D7 Tracking Points"
+        description: "Number of tracking points a user created Days 0 to 7"
+        sql: "CASE WHEN {days_since_account_created} > 7 THEN {CUBE}.count_d7_tracking_points + {CUBE}.count_d7_fast_tracking_points END"
+        type: number
+        meta:
+          group_label: "Tracking Points"
+
+      - name: count_d30_tracking_points
+        title: "Count D30 Tracking Points"
+        description: "Number of tracking points a user created Days 0 to 30"
+        sql: "CASE WHEN {days_since_account_created} > 30 THEN {CUBE}.count_d30_tracking_points + {CUBE}.count_d30_fast_tracking_points END"
+        type: number
+        meta:
+          group_label: "Tracking Points"
+
+      # Tracking Days
+      - name: count_d7_tracking_days
+        title: "Count D7 Tracking Days"
+        description: "Number of days a user tracked Days 0 to 7"
+        sql: "CASE WHEN {days_since_account_created} > 7 THEN {CUBE}.count_d7_tracking_days END"
+        type: number
+        meta:
+          group_label: "Tracking Days"
+
+      - name: count_d30_tracking_days
+        title: "Count D30 Tracking Days"
+        description: "Number of days a user tracked Days 0 to 30"
+        sql: "CASE WHEN {days_since_account_created} > 30 THEN {CUBE}.count_d30_tracking_days END"
+        type: number
+        meta:
+          group_label: "Tracking Days"
+
+      - name: is_activated
+        title: "Is Activated"
+        description: "Whether a user is activated, i.e. created >=5 tracking points across >=2 days by D7"
+        sql: >
+          CASE WHEN {days_since_account_created} > 7
+            THEN {count_d7_tracking_points} >= 5 AND {count_d7_tracking_days} >= 2
+          END
+        type: boolean
+
+    measures:
+      - name: activation_rate
+        title: "Activation Rate"
+        description: "The share of new users activated, i.e. created >=5 tracking points across >=2 days by D7"
+        sql: >
+          CASE WHEN {days_since_account_created} > 7
+                AND {count_d7_tracking_points} >= 5 AND {count_d7_tracking_days} >= 2 THEN 1.0
+               WHEN {days_since_account_created} > 7 THEN 0.0
+          END
+        type: avg
+        meta:
+          format: percent_1

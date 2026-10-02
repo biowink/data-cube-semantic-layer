@@ -1,0 +1,1460 @@
+cubes:
+  - name: adjust_campaign_performance
+    sql_table: der.adjust_campaign_performance
+
+    dimensions:
+    # Dates
+      - name: date
+        sql: |-
+          {CUBE}.date
+        type: time
+
+      - name: month_name
+        title: Month Name
+        sql: |-
+          DATE_FORMAT({CUBE}.date, '%M')
+        type: string
+
+      - name: day_of_week
+        title: Day of Week
+        sql: |-
+          DATE_FORMAT({CUBE}.date, '%W')
+        type: string
+
+      - name: day_of_month
+        title: Day of Month
+        sql: |-
+          DAY({CUBE}.date)
+        type: number
+
+      - name: day_of_year
+        title: Day of Year
+        sql: |-
+          DAY_OF_YEAR({CUBE}.date)
+        type: number
+
+    # Ad Dimensions
+      - name: network
+        sql: |-
+          {CUBE}.network
+        type: string
+
+      - name: raw_network
+        title: Network value sent from Adjust
+        sql: |-
+          {CUBE}.raw_network
+        type: string
+
+      - name: source_type
+        sql: |-
+          CASE
+          WHEN {CUBE}.network IN ('Organic', 'Google Organic Search', 'test tracker') THEN 'organic'
+          WHEN {CUBE}.network IN ('Google Ads ACI', 'Apple Search Ads', 'TikTok', 'Meta', 'Reddit') THEN 'paid'
+          WHEN {CUBE}.network IN ('TikTok Brand', 'Meta Brand') THEN 'brand'
+          ELSE 'owned'
+          END
+        type: string
+
+      - name: network_group
+        sql: |-
+          CASE WHEN {CUBE}.platform NOT IN ('ios', 'android')
+          THEN 'Other'
+          WHEN {CUBE}.network IN ('Organic', 'Google Organic Search')
+          THEN 'Organic - ' || {CUBE}.platform
+          WHEN {CUBE}.network IN ('Screen Shot', 'Share Clue')
+          THEN 'Link Sharing'
+          WHEN {CUBE}.network IN ('Content', 'Clue account - Website', 'Homepage', 'Clue Website')
+          THEN 'helloclue.com'
+          WHEN {CUBE}.network IN ('TikTok', 'Google Ads ACI', 'Meta', 'Reddit')
+          THEN {CUBE}.network || ' - ' || {CUBE}.platform
+          WHEN {CUBE}.network IN ('Apple Search Ads', 'Clue Connect')
+          THEN {CUBE}.network
+          WHEN {CUBE}.network IN ('TikTok Brand', 'Meta Brand') THEN 'Brand Campaigns'
+          WHEN {CUBE}.network IS NULL
+          THEN 'No Attribution'
+          ELSE 'Other'
+          END
+        type: string
+
+      - name: network_group_without_owned
+        sql: |-
+          CASE WHEN {CUBE}.platform NOT IN ('ios', 'android')
+          THEN 'Other'
+          WHEN {CUBE}.network IN ('Organic', 'Google Organic Search')
+          THEN 'Organic - ' || {CUBE}.platform
+          WHEN {CUBE}.network IN ('Screen Shot', 'Share Clue', 'Content', 'Clue account - Website', 'Homepage', 'Clue Website', 'Clue Connect')
+          THEN 'Owned'
+          WHEN {CUBE}.network IN ('TikTok', 'Google Ads ACI', 'Meta', 'Reddit')
+          THEN {CUBE}.network || ' - ' || {CUBE}.platform
+          WHEN {CUBE}.network = 'Apple Search Ads'
+          THEN {CUBE}.network
+          WHEN {CUBE}.network IN ('TikTok Brand', 'Meta Brand') THEN 'Brand Campaigns'
+          WHEN {CUBE}.network IS NULL
+          THEN 'No Attribution'
+          ELSE 'Other'
+          END
+        type: string
+
+      - name: campaign
+        sql: |-
+          {CUBE}.campaign
+        type: string
+
+      - name: adgroup
+        sql: |-
+          {CUBE}.adgroup
+        type: string
+
+      - name: content_category
+        sql: |-
+          CASE WHEN {CUBE}.adgroup like 'Article Slug%'
+          THEN ELEMENT_AT(SPLIT(ELEMENT_AT(SPLIT({CUBE}.adgroup, '/'), 1), ': '), -1)
+          ELSE NULL END
+        type: string
+
+      - name: creative
+        sql: |-
+          {CUBE}.creative
+        type: string
+
+      - name: campaign_without_id
+        title: Campaign without ID
+        sql: |-
+          {CUBE}.campaign_name
+        type: string
+
+      - name: adgroup_without_id
+        title: Adgroup without ID
+        sql: |-
+          {CUBE}.adgroup_name
+        type: string
+
+      - name: creative_without_id
+        title: Creative without ID
+        sql: |-
+          {CUBE}.creative_name
+        type: string
+
+      - name: creative_without_group
+        title: Creative without Group
+        sql: |-
+          array_join(slice(split({CUBE}.creative_name, '_'), 1, 9), '_')
+        type: string
+
+      - name: creative_language
+        sql: |-
+          ELEMENT_AT(SPLIT(ELEMENT_AT(SPLIT({CUBE}.creative, ' '), 1), '_'),1)
+        type: string
+
+      - name: creative_app_mode
+        sql: |-
+          ELEMENT_AT(SPLIT(ELEMENT_AT(SPLIT({CUBE}.creative, ' '), 1), '_'),2)
+        type: string
+
+      - name: creative_style
+        sql: |-
+          ELEMENT_AT(SPLIT(ELEMENT_AT(SPLIT({CUBE}.creative, ' '), 1), '_'),3)
+        type: string
+
+      - name: creative_topic
+        sql: |-
+          ELEMENT_AT(SPLIT(ELEMENT_AT(SPLIT({CUBE}.creative, ' '), 1), '_'),4)
+        type: string
+
+      - name: creative_details
+        sql: |-
+          ELEMENT_AT(SPLIT(ELEMENT_AT(SPLIT({CUBE}.creative, ' '), 1), '_'),5)
+        type: string
+
+      - name: creative_dimensions
+        sql: |-
+          ELEMENT_AT(SPLIT(ELEMENT_AT(SPLIT(ELEMENT_AT(SPLIT({CUBE}.creative, ' '), 1), '_'),6),'.'), 1)
+        type: string
+
+      - name: creative_creator
+        sql: |-
+          ELEMENT_AT(SPLIT(ELEMENT_AT(SPLIT(ELEMENT_AT(SPLIT({CUBE}.creative, ' '), 1), '_'),7),'.'), 1)
+        type: string
+
+      - name: creative_batch
+        sql: |-
+          ELEMENT_AT(SPLIT(ELEMENT_AT(SPLIT(ELEMENT_AT(SPLIT({CUBE}.creative, ' '), 1), '_'),8),'.'), 1)
+        type: string
+
+      - name: country
+        sql: |-
+          {CUBE}.country
+        type: string
+
+      - name: country_code
+        sql: |-
+          {CUBE}.country_code
+        type: string
+
+      - name: market
+        title: Market (4)
+        sql: |-
+          COALESCE({CUBE}.market, 'Rest of World')
+        type: string
+
+      - name: market_3
+        title: Market (3)
+        sql: |-
+          CASE WHEN {market} IN ('Strategic w/o US and Europe', 'Strategic Europe') THEN 'Non-US Strategic' ELSE {market} END
+        type: string
+
+      - name: region
+        sql: |-
+          {CUBE}.region
+        type: string
+
+      - name: platform
+        sql: |-
+          {CUBE}.platform
+        type: string
+
+      - name: optimisation_goal
+        sql: |-
+          CASE WHEN {CUBE}.campaign like '%_NewLanguage%'
+          THEN 'New Language'
+          WHEN ({CUBE}.campaign like '%_Reg%'
+          OR {CUBE}.campaign like '%_REG%'
+          OR {CUBE}.campaign like '%_reg%'
+          OR {CUBE}.campaign like '%_Generic%'
+          OR {CUBE}.campaign like '%_Competitor%'
+          OR {CUBE}.campaign like '%_Probing%'
+          OR {CUBE}.campaign like 'UK_ASA_PeriodTracker_January2026%')
+          AND {CUBE}.campaign not like '%_Install%'
+          THEN 'Registration'
+          WHEN {CUBE}.campaign like '%_Brand%'
+          THEN 'Brand'
+          WHEN ({CUBE}.campaign like '%install%'
+          OR {CUBE}.campaign like '%Install%'
+          OR {CUBE}.campaign like '%_Discovery%'
+          OR {CUBE}.campaign = 'unknown (1809913192032305)')
+          AND {CUBE}.campaign not like '%_Reg%'
+          THEN 'Install'
+          WHEN {CUBE}.campaign like '%_FreeTrial%'
+          THEN 'Free Trial'
+          WHEN ({CUBE}.campaign like '%_tROAS%'
+          OR {CUBE}.campaign like '%_TROAS%')
+          THEN 'tROAS'
+          WHEN {CUBE}.campaign like '%Subscription%'
+          THEN 'Subscription'
+          WHEN {CUBE}.campaign like '%_SearchTab%'
+          THEN 'Search Tab'
+          ELSE 'none' END
+        type: string
+
+      - name: campaign_goal
+        sql: |-
+          CASE WHEN ({CUBE}.campaign like '%tROAS%'
+          OR {CUBE}.campaign like '%FreeTrial%'
+          OR {CUBE}.campaign like '%Brand%')
+          THEN 'LTV:CAC'
+          WHEN ({CUBE}.campaign like '%Registration%'
+          OR {CUBE}.campaign like '%Install%'
+          OR {CUBE}.campaign like '%Discovery%'
+          OR {CUBE}.campaign like '%Probing%'
+          OR {CUBE}.campaign like '%Generic%'
+          OR {CUBE}.campaign like '%Competitors%'
+          OR {CUBE}.campaign like '%Perimenopause%'
+          OR {CUBE}.campaign like '%Reg%'
+          OR {CUBE}.campaign like '%reg%'
+          OR {CUBE}.campaign like '%Competitor%')
+          THEN 'MAU'
+          ELSE NULL END
+        type: string
+
+    measures:
+      - name: clicks
+        sql: |-
+          {CUBE}.clicks
+        type: sum
+
+      - name: impressions
+        sql: |-
+          {CUBE}.impressions
+        type: sum
+
+      - name: adjust_installs
+        title: "Installs"
+        description: Installs as attributed by Adjust
+        sql: |-
+          {CUBE}.installs
+        type: sum
+
+      - name: skad_installs
+        title: "Installs - SKAdNetwork Attribution"
+        description: Installs as attributed by SKAdNetwork
+        sql: |-
+          {CUBE}.skad_installs
+        type: sum
+
+      - name: skad_reinstalls
+        title: "Reinstalls - SKAdNetwork Attribution"
+        description: Reinstalls as attributed by SKAdNetwork
+        sql: |-
+          {CUBE}.skad_reinstalls
+        type: sum
+
+      - name: limit_ad_tracking_installs
+        description: Number of installs (Adjust-attributed) who did not consent to be tracked. This means that Adjust must use probabilistic attribution rather than direct attribution.
+        sql: |-
+          {CUBE}.limit_ad_tracking_installs
+        type: sum
+
+      - name: sessions
+        sql: |-
+          {CUBE}.sessions
+        type: sum
+
+      - name: ad_spend
+        description: Ad spend as reported by each network
+        sql: |-
+          {CUBE}.cost
+        type: sum
+        format: currency
+        currency: EUR
+
+      - name: ad_spend_d7
+        description: Ad spend as reported by each network
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '8' DAY THEN NULL
+          ELSE {CUBE}.cost
+          END
+        type: sum
+        format: currency
+        currency: EUR
+        public: false
+
+      - name: ad_spend_d14
+        description: Ad spend as reported by each network
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '15' DAY THEN NULL
+          ELSE {CUBE}.cost
+          END
+        type: sum
+        format: currency
+        currency: EUR
+        public: false
+
+      - name: ad_spend_d30
+        description: Ad spend as reported by each network
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '31' DAY THEN NULL
+          ELSE {CUBE}.cost
+          END
+        type: sum
+        format: currency
+        currency: EUR
+        public: false
+
+      - name: ad_spend_d120
+        description: Ad spend as reported by each network
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '121' DAY THEN NULL
+          ELSE {CUBE}.cost
+          END
+        type: sum
+        format: currency
+        currency: EUR
+        public: false
+
+      - name: ad_spend_d360
+        description: Ad spend as reported by each network
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '361' DAY THEN NULL
+          ELSE {CUBE}.cost
+          END
+        type: sum
+        format: currency
+        currency: EUR
+        public: false
+
+      - name: ad_spend_usd
+        title: "Ad Spend USD"
+        description: Ad spend from TvScientific, reported in USD
+        sql: |-
+          {CUBE}.cost_in_usd
+        type: sum
+        format: currency
+        currency: USD
+
+      - name: gdpr_forgets
+        title: "GDPR Forgets"
+        sql: |-
+          {CUBE}.gdpr_forgets
+        type: sum
+
+      - name: age_above_44_events
+        sql: |-
+          {CUBE}.age_above_44_events
+        type: sum
+
+      - name: age_below_30_events
+        sql: |-
+          {CUBE}.age_below_30_events
+        type: sum
+
+      - name: age_between_30_and_44_events
+        sql: |-
+          {CUBE}.age_between_30_and_44_events
+        type: sum
+
+  ################################################################## D0 Conversions
+      - name: d0_created_account_conversions
+        description: Number of users who installed on the given date who then created an account within 1 day
+        sql: |-
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d0_backend_created_account_conversions
+          ELSE {CUBE}.d0_created_account_conversions
+          END
+        type: sum
+
+      - name: d0_free_trial_conversions
+        description: Number of users who installed on the given date who then converted to free trial within 1 day
+        sql: |-
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d0_backend_free_trial_conversions
+          ELSE {CUBE}.d0_free_trial_conversions
+          END
+        type: sum
+
+      - name: d0_1m_subscription_conversions
+        description: Number of users who installed on the given date who then converted to the 1m subscription within 1 day
+        sql: |-
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d0_backend_1m_subscription_conversions
+          ELSE {CUBE}.d0_1m_subscription_conversions
+          END
+        type: sum
+
+      - name: d0_1m_subscription_revenue
+        description: Total revenue from users who installed on the given date who then converted to the 1m subscription within 1 day
+        sql: |-
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d0_backend_1m_subscription_revenue
+          ELSE {CUBE}.d0_1m_subscription_revenue
+          END
+        type: sum
+        format: currency
+        currency: EUR
+
+      - name: d0_12m_subscription_conversions
+        description: Number of users who installed on the given date who then converted to the 12m subscription within 1 day
+        sql: |-
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d0_backend_12m_subscription_conversions
+          ELSE {CUBE}.d0_12m_subscription_conversions
+          END
+        type: sum
+
+      - name: d0_12m_subscription_revenue
+        description: Total revenue from users who installed on the given date who then converted to the 12m subscription within 1 day
+        sql: |-
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d0_backend_12m_subscription_revenue
+          ELSE {CUBE}.d0_12m_subscription_revenue
+          END
+        type: sum
+        format: currency
+        currency: EUR
+
+      - name: d0_partner_subscription_conversions
+        description: Number of users who installed on the given date who then converted to a partner subscription within 1 day
+        sql: |-
+          {CUBE}.d0_backend_partner_subscription_conversions
+        type: sum
+
+      - name: d0_partner_subscription_revenue
+        description: Total revenue from users who installed on the given date who then converted to a partner subscription within 1 day
+        sql: |-
+          {CUBE}.d0_backend_partner_subscription_revenue
+        type: sum
+        format: currency
+        currency: EUR
+
+      - name: total_d0_subscription_conversions
+        title: "Total D0 Conversions (Trials + Subs)"
+        description: "D0 Free Trials + D0 1m Subscriptions + D0 12m Subscriptions + D0 Partner Subscriptions"
+        sql: |-
+          COALESCE({d0_free_trial_conversions},0) + COALESCE({d0_1m_subscription_conversions},0) + COALESCE({d0_12m_subscription_conversions},0) + COALESCE({d0_partner_subscription_conversions},0)
+        type: number
+
+      - name: total_d0_revenue
+        description: "D0 1m Subscription Revenue + D0 12m Subscription Revenue + D0 Partner Revenue"
+        sql: |-
+          COALESCE({d0_12m_subscription_revenue},0) + COALESCE({d0_1m_subscription_revenue},0) + COALESCE({d0_partner_subscription_revenue},0)
+        type: number
+        format: currency
+        currency: EUR
+
+################################################################## D7 Conversions
+      - name: d7_created_account_conversions
+        description: Number of users who installed on the given date who then created an account within 7 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '8' DAY THEN NULL
+          ELSE
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d7_backend_created_account_conversions
+          ELSE {CUBE}.d7_created_account_conversions
+          END
+          END
+        type: sum
+
+      - name: d7_free_trial_conversions
+        description: Number of users who installed on the given date who then converted to free trial within 7 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '8' DAY THEN NULL
+          ELSE
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d7_backend_free_trial_conversions
+          ELSE {CUBE}.d7_free_trial_conversions
+          END
+          END
+        type: sum
+
+      - name: d7_1m_subscription_conversions
+        description: Number of users who installed on the given date who then converted to the 1m subscription within 7 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '8' DAY THEN NULL
+          ELSE
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d7_backend_1m_subscription_conversions
+          ELSE {CUBE}.d7_1m_subscription_conversions
+          END
+          END
+        type: sum
+
+      - name: d7_1m_subscription_revenue
+        description: Total revenue from users who installed on the given date who then converted to the 1m subscription within 7 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '8' DAY THEN NULL
+          ELSE
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d7_backend_1m_subscription_revenue
+          ELSE {CUBE}.d7_1m_subscription_revenue
+          END
+          END
+        type: sum
+        format: currency
+        currency: EUR
+
+      - name: d7_12m_subscription_conversions
+        description: Number of users who installed on the given date who then converted to the 12m subscription within 7 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '8' DAY THEN NULL
+          ELSE
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d7_backend_12m_subscription_conversions
+          ELSE {CUBE}.d7_12m_subscription_conversions
+          END
+          END
+        type: sum
+
+      - name: d7_12m_subscription_revenue
+        description: Total revenue from users who installed on the given date who then converted to the 12m subscription within 7 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '8' DAY THEN NULL
+          ELSE
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d7_backend_12m_subscription_revenue
+          ELSE {CUBE}.d7_12m_subscription_revenue
+          END
+          END
+        type: sum
+        format: currency
+        currency: EUR
+
+      - name: d7_partner_subscription_conversions
+        description: Number of users who installed on the given date who then converted to a partner subscription within 7 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '8' DAY THEN NULL
+          ELSE {CUBE}.d7_backend_partner_subscription_conversions
+          END
+        type: sum
+
+      - name: d7_partner_subscription_revenue
+        description: Total revenue from users who installed on the given date who then converted to a partner subscription within 7 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '8' DAY THEN NULL
+          ELSE {CUBE}.d7_backend_partner_subscription_revenue
+          END
+        type: sum
+        format: currency
+        currency: EUR
+
+      - name: total_d7_paid_conversions
+        description: "D7 1m Subscriptions + D7 12m Subscriptions + D0 Partner Subscriptions"
+        sql: |-
+          COALESCE({d7_1m_subscription_conversions},0) + COALESCE({d7_12m_subscription_conversions},0) + + COALESCE({d7_partner_subscription_conversions},0)
+        type: number
+
+      - name: total_d7_revenue
+        description: "D7 1m Subscription Revenue + D7 12m Subscription Revenue + D7 Partner Subscription Revenue"
+        sql: |-
+          COALESCE({d7_12m_subscription_revenue},0) + COALESCE({d7_1m_subscription_revenue},0)  + COALESCE({d7_partner_subscription_revenue},0)
+        type: number
+        format: currency
+        currency: EUR
+
+      - name: paid_d7_revenue
+        title: Paid D7 Revenue
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '8' DAY THEN NULL
+          ELSE
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN COALESCE({CUBE}.d7_backend_12m_subscription_revenue,0) + COALESCE({CUBE}.d7_backend_1m_subscription_revenue,0) + COALESCE({CUBE}.d7_backend_partner_subscription_conversions, 0)
+          ELSE COALESCE({CUBE}.d7_12m_subscription_revenue,0) + COALESCE({CUBE}.d7_1m_subscription_revenue,0) + COALESCE({CUBE}.d7_backend_partner_subscription_conversions, 0)
+          END
+          END
+        type: sum
+        format: currency
+        currency: EUR
+        public: false
+        filters:
+          - sql: "{source_type} = 'paid'"
+
+      - name: d7_roas
+        title: "D7 ROAS"
+        description: Revenue at D7 over ad spend
+        sql: |-
+          NULLIF({total_d7_revenue},0) / {ad_spend_d7}
+        type: number
+
+      - name: paid_d7_roas
+        title: "Paid D7 ROAS"
+        description: Paid Revenue at D7 over ad spend
+        sql: |-
+          NULLIF({paid_d7_revenue},0) / {ad_spend_d7}
+        type: number
+
+################################################################## D14 Conversions
+      - name: d14_created_account_conversions
+        description: Number of users who installed on the given date who then created an account within 14 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '15' DAY THEN NULL
+          ELSE
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d14_backend_created_account_conversions
+          ELSE {CUBE}.d14_created_account_conversions
+          END
+          END
+        type: sum
+
+      - name: d14_free_trial_conversions
+        description: Number of users who installed on the given date who then converted to free trial within 14 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '15' DAY THEN NULL
+          ELSE
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d14_backend_free_trial_conversions
+          ELSE {CUBE}.d14_free_trial_conversions
+          END
+          END
+        type: sum
+
+      - name: d14_1m_subscription_conversions
+        description: Number of users who installed on the given date who then converted to the 1m subscription within 14 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '15' DAY THEN NULL
+          ELSE
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d14_backend_1m_subscription_conversions
+          ELSE {CUBE}.d14_1m_subscription_conversions
+          END
+          END
+        type: sum
+
+      - name: d14_1m_subscription_revenue
+        description: Total revenue from users who installed on the given date who then converted to the 1m subscription within 14 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '15' DAY THEN NULL
+          ELSE
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d14_backend_1m_subscription_revenue
+          ELSE {CUBE}.d14_1m_subscription_revenue
+          END
+          END
+        type: sum
+        format: currency
+        currency: EUR
+
+      - name: d14_12m_subscription_conversions
+        description: Number of users who installed on the given date who then converted to the 12m subscription within 14 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '15' DAY THEN NULL
+          ELSE
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d14_backend_12m_subscription_conversions
+          ELSE {CUBE}.d14_12m_subscription_conversions
+          END
+          END
+        type: sum
+
+      - name: d14_12m_subscription_revenue
+        description: Total revenue from users who installed on the given date who then converted to the 12m subscription within 14 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '15' DAY THEN NULL
+          ELSE
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d14_backend_12m_subscription_revenue
+          ELSE {CUBE}.d14_12m_subscription_revenue
+          END
+          END
+        type: sum
+        format: currency
+        currency: EUR
+
+      - name: d14_partner_subscription_conversions
+        description: Number of users who installed on the given date who then converted to a partner subscription within 14 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '15' DAY THEN NULL
+          ELSE {CUBE}.d14_backend_partner_subscription_conversions
+          END
+        type: sum
+
+      - name: d14_partner_subscription_revenue
+        description: Total revenue from users who installed on the given date who then converted to a partner subscription within 14 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '15' DAY THEN NULL
+          ELSE {CUBE}.d14_backend_partner_subscription_revenue
+          END
+        type: sum
+        format: currency
+        currency: EUR
+
+      - name: total_d14_paid_conversions
+        description: "D14 1m Subscriptions + D14 12m Subscriptions + D14 Partner Subscriptions"
+        sql: |-
+          COALESCE({d14_1m_subscription_conversions},0) + COALESCE({d14_12m_subscription_conversions},0) + + COALESCE({d14_partner_subscription_conversions},0)
+        type: number
+
+      - name: total_d14_revenue
+        description: "D14 1m Subscription Revenue + D14 12m Subscription Revenue + D14 Partner Subscription Revenue"
+        sql: |-
+          COALESCE({d14_12m_subscription_revenue},0) + COALESCE({d14_1m_subscription_revenue},0)  + COALESCE({d14_partner_subscription_revenue},0)
+        type: number
+        format: currency
+        currency: EUR
+
+      - name: paid_d14_revenue
+        title: Paid D14 Revenue
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '15' DAY THEN NULL
+          ELSE
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN COALESCE({CUBE}.d14_backend_12m_subscription_revenue,0) + COALESCE({CUBE}.d14_backend_1m_subscription_revenue,0) + COALESCE({CUBE}.d14_backend_partner_subscription_conversions, 0)
+          ELSE COALESCE({CUBE}.d14_12m_subscription_revenue,0) + COALESCE({CUBE}.d14_1m_subscription_revenue,0) + COALESCE({CUBE}.d14_backend_partner_subscription_conversions, 0)
+          END
+          END
+        type: sum
+        format: currency
+        currency: EUR
+        public: false
+        filters:
+          - sql: "{source_type} = 'paid'"
+
+      - name: d14_roas
+        title: D14 ROAS
+        description: Revenue at D14 over ad spend
+        sql: |-
+          NULLIF({total_d14_revenue},0) / {ad_spend_d14}
+        type: number
+
+      - name: paid_d14_roas
+        title: Paid D14 ROAS
+        description: Paid Revenue at D14 over ad spend
+        sql: |-
+          NULLIF({paid_d14_revenue},0) / {ad_spend_d14}
+        type: number
+
+################################################################## D30 Conversions
+      - name: d30_created_account_conversions
+        description: Number of users who installed on the given date who then created an account within 1 month
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '31' DAY THEN NULL
+          ELSE
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d30_backend_created_account_conversions
+          ELSE {CUBE}.d30_created_account_conversions
+          END
+          END
+        type: sum
+
+      - name: d30_free_trial_conversions
+        description: Number of users who installed on the given date who then converted to free trial within 1 month
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '31' DAY THEN NULL
+          ELSE
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d30_backend_free_trial_conversions
+          ELSE {CUBE}.d30_free_trial_conversions
+          END
+          END
+        type: sum
+
+      - name: d30_1m_subscription_conversions
+        description: Number of users who installed on the given date who then converted to the 1m subscription within 1 month
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '31' DAY THEN NULL
+          ELSE
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d30_backend_1m_subscription_conversions
+          ELSE {CUBE}.d30_1m_subscription_conversions
+          END
+          END
+        type: sum
+
+      - name: d30_1m_subscription_revenue
+        description: Total revenue from users who installed on the given date who then converted to the 1m subscription within 1 month
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '31' DAY THEN NULL
+          ELSE
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d30_backend_1m_subscription_revenue
+          ELSE {CUBE}.d30_1m_subscription_revenue
+          END
+          END
+        type: sum
+        format: currency
+        currency: EUR
+
+      - name: d30_12m_subscription_conversions
+        description: Number of users who installed on the given date who then converted to the 12m subscription within 1 month
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '31' DAY THEN NULL
+          ELSE
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d30_backend_12m_subscription_conversions
+          ELSE {CUBE}.d30_12m_subscription_conversions
+          END
+          END
+        type: sum
+
+      - name: d30_12m_subscription_revenue
+        description: Total revenue from users who installed on the given date who then converted to the 12m subscription within 1 month
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '31' DAY THEN NULL
+          ELSE
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d30_backend_12m_subscription_revenue
+          ELSE {CUBE}.d30_12m_subscription_revenue
+          END
+          END
+        type: sum
+        format: currency
+        currency: EUR
+
+      - name: d30_partner_subscription_conversions
+        description: Number of users who installed on the given date who then converted to a partner subscription within 30 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '31' DAY THEN NULL
+          ELSE {CUBE}.d30_backend_partner_subscription_conversions
+          END
+        type: sum
+
+      - name: d30_partner_subscription_revenue
+        description: Total revenue from users who installed on the given date who then converted to a partner subscription within 30 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '31' DAY THEN NULL
+          ELSE {CUBE}.d30_backend_partner_subscription_revenue
+          END
+        type: sum
+        format: currency
+        currency: EUR
+
+      - name: total_d30_paid_conversions
+        description: "D30 1m Subscriptions + D30 12m Subscriptions"
+        sql: |-
+          COALESCE({d30_1m_subscription_conversions},0) + COALESCE({d30_12m_subscription_conversions},0)  + COALESCE({d30_partner_subscription_conversions},0)
+        type: number
+
+      - name: total_d30_revenue
+        description: "D30 1m Subscription Revenue + D30 12m Subscription Revenue"
+        sql: |-
+          COALESCE({d30_12m_subscription_revenue},0) + COALESCE({d30_1m_subscription_revenue},0) + COALESCE({d30_partner_subscription_revenue},0)
+        type: number
+        format: currency
+        currency: EUR
+
+      - name: d30_roas
+        title: D30 ROAS
+        description: Revenue at D30 over ad spend
+        sql: |-
+          NULLIF({total_d30_revenue},0) / {ad_spend_d30}
+        type: number
+
+################################################################## D120 Conversions
+      - name: d120_created_account_conversions
+        description: Number of users who installed on the given date who then created an account within 120 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '121' DAY THEN NULL
+          ELSE
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d120_backend_created_account_conversions
+          ELSE {CUBE}.d120_created_account_conversions
+          END
+          END
+        type: sum
+
+      - name: d120_free_trial_conversions
+        description: Number of users who installed on the given date who then converted to free trial within 120 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '121' DAY THEN NULL
+          ELSE
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d120_backend_free_trial_conversions
+          ELSE {CUBE}.d120_free_trial_conversions
+          END
+          END
+        type: sum
+
+      - name: d120_1m_subscription_conversions
+        description: Number of users who installed on the given date who then converted to the 1m subscription within 120 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '121' DAY THEN NULL
+          ELSE
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d120_backend_1m_subscription_conversions
+          ELSE {CUBE}.d120_1m_subscription_conversions
+          END
+          END
+        type: sum
+
+      - name: d120_1m_subscription_revenue
+        description: Total revenue from users who installed on the given date who then converted to the 1m subscription within 120 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '121' DAY THEN NULL
+          ELSE
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d120_backend_1m_subscription_revenue
+          ELSE {CUBE}.d120_1m_subscription_revenue
+          END
+          END
+        type: sum
+        format: currency
+        currency: EUR
+
+      - name: d120_12m_subscription_conversions
+        description: Number of users who installed on the given date who then converted to the 12m subscription within 120 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '121' DAY THEN NULL
+          ELSE
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d120_backend_12m_subscription_conversions
+          ELSE {CUBE}.d120_12m_subscription_conversions
+          END
+          END
+        type: sum
+
+      - name: d120_12m_subscription_revenue
+        description: Total revenue from users who installed on the given date who then converted to the 12m subscription within 120 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '121' DAY THEN NULL
+          ELSE
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.d120_backend_12m_subscription_revenue
+          ELSE {CUBE}.d120_12m_subscription_revenue
+          END
+          END
+        type: sum
+        format: currency
+        currency: EUR
+
+      - name: d120_partner_subscription_conversions
+        description: Number of users who installed on the given date who then converted to a partner subscription within 120 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '121' DAY THEN NULL
+          ELSE {CUBE}.d120_backend_partner_subscription_conversions
+          END
+        type: sum
+
+      - name: d120_partner_subscription_revenue
+        description: Total revenue from users who installed on the given date who then converted to a partner subscription within 120 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '121' DAY THEN NULL
+          ELSE {CUBE}.d120_backend_partner_subscription_revenue
+          END
+        type: sum
+        format: currency
+        currency: EUR
+
+      - name: total_d120_paid_conversions
+        description: "D120 1m Subscriptions + D120 12m Subscriptions"
+        sql: |-
+          COALESCE({d120_1m_subscription_conversions},0) + COALESCE({d120_12m_subscription_conversions},0) + COALESCE({d120_partner_subscription_conversions},0)
+        type: number
+
+      - name: total_d120_revenue
+        description: "D120 1m Subscription Revenue + D120 12m Subscription Revenue"
+        sql: |-
+          COALESCE({d120_12m_subscription_revenue},0) + COALESCE({d120_1m_subscription_revenue},0) + COALESCE({d120_partner_subscription_revenue},0)
+        type: number
+        format: currency
+        currency: EUR
+
+      - name: d120_roas
+        title: D120 ROAS
+        description: Revenue at D120 over ad spend
+        sql: |-
+          NULLIF({total_d120_revenue},0) / {ad_spend_d120}
+        type: number
+
+################################################################## D360 Conversions
+      - name: d360_created_account_conversions
+        description: Number of users who installed on the given date who then created an account within 360 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '361' DAY THEN NULL
+          ELSE {CUBE}.d360_backend_created_account_conversions
+          END
+        type: sum
+
+      - name: d360_free_trial_conversions
+        description: Number of users who installed on the given date who then converted to free trial within 360 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '361' DAY THEN NULL
+          ELSE {CUBE}.d360_backend_free_trial_conversions
+          END
+        type: sum
+
+      - name: d360_1m_subscription_conversions
+        description: Number of users who installed on the given date who then converted to the 1m subscription within 360 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '361' DAY THEN NULL
+          ELSE {CUBE}.d360_backend_1m_subscription_conversions
+          END
+        type: sum
+
+      - name: d360_1m_subscription_revenue
+        description: Total revenue from users who installed on the given date who then converted to the 1m subscription within 360 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '361' DAY THEN NULL
+          ELSE {CUBE}.d360_backend_1m_subscription_revenue
+          END
+        type: sum
+        format: currency
+        currency: EUR
+
+      - name: d360_12m_subscription_conversions
+        description: Number of users who installed on the given date who then converted to the 12m subscription within 360 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '361' DAY THEN NULL
+          ELSE {CUBE}.d360_backend_12m_subscription_conversions
+          END
+        type: sum
+
+      - name: d360_12m_subscription_revenue
+        description: Total revenue from users who installed on the given date who then converted to the 12m subscription within 360 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '361' DAY THEN NULL
+          ELSE {CUBE}.d360_backend_12m_subscription_revenue
+          END
+        type: sum
+        format: currency
+        currency: EUR
+
+      - name: d360_partner_subscription_conversions
+        description: Number of users who installed on the given date who then converted to a partner subscription within 360 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '361' DAY THEN NULL
+          ELSE {CUBE}.d360_backend_partner_subscription_conversions
+          END
+        type: sum
+
+      - name: d360_partner_subscription_revenue
+        description: Total revenue from users who installed on the given date who then converted to a partner subscription within 360 days
+        sql: |-
+          CASE WHEN {CUBE}.date > CURRENT_DATE - INTERVAL '361' DAY THEN NULL
+          ELSE {CUBE}.d360_backend_partner_subscription_revenue
+          END
+        type: sum
+        format: currency
+        currency: EUR
+
+      - name: total_d360_paid_conversions
+        description: "D360 1m Subscriptions + D360 12m Subscriptions"
+        sql: |-
+          COALESCE({d360_1m_subscription_conversions},0) + COALESCE({d360_12m_subscription_conversions},0) + COALESCE({d360_partner_subscription_conversions},0)
+        type: number
+
+      - name: total_d360_revenue
+        description: "D360 1m Subscription Revenue + D360 12m Subscription Revenue"
+        sql: |-
+          COALESCE({d360_12m_subscription_revenue},0) + COALESCE({d360_1m_subscription_revenue},0) + COALESCE({d360_partner_subscription_revenue},0)
+        type: number
+        format: currency
+        currency: EUR
+
+      - name: d360_roas
+        title: D360 ROAS
+        description: Revenue at D360 over ad spend
+        sql: |-
+          NULLIF({total_d360_revenue},0) / {ad_spend_d360}
+        type: number
+
+################################################################## SKAd Network Conversions
+      - name: skad_event_1_conversions
+        title: CVal 1 Events - Did Create Account
+        description: Did Create Account events attributed by SKAdNetwork
+        sql: |-
+          {CUBE}.skad_event_1_conversions
+        type: sum
+
+      - name: skad_event_2_conversions
+        title: CVal 2 Events - Started Free Trial
+        description: Started Free Trial events attributed by SKAdNetwork
+        sql: |-
+          {CUBE}.skad_event_2_conversions
+        type: sum
+
+      - name: skad_event_3_conversions
+        title: CVal 3 Events - Purchased 1m Subscription
+        description: Purchased 1m Subscription events attributed by SKAdNetwork
+        sql: |-
+          {CUBE}.skad_event_3_conversions
+        type: sum
+
+      - name: skad_event_4_conversions
+        title: CVal 4 Events - Purchased 12m Subscription
+        description: Purchased 12m Subscription events attributed by SKAdNetwork
+        sql: |-
+          {CUBE}.skad_event_4_conversions
+        type: sum
+
+      - name: skad_event_5_conversions
+        title: CVal 5 Events - Renewed 1m Subscription
+        description: Renewed 1m Subscription events attributed by SKAdNetwork
+        sql: |-
+          {CUBE}.skad_event_5_conversions
+        type: sum
+
+      - name: skad_event_6_conversions
+        title: CVal 6 Events - Renewed 12m Subscription
+        description: Renewed 12m Subscription events attributed by SKAdNetwork
+        sql: |-
+          {CUBE}.skad_event_6_conversions
+        type: sum
+
+      - name: total_skad_d0_conversions
+        title: Total D0 SKAdNetwork Conversions
+        description: "SKAdNetwork D0 free trial + 12m + 1m subscriptions (Conversion Values 2, 3, and 4)"
+        sql: |-
+          {CUBE}.skad_event_2_conversions + {CUBE}.skad_event_3_conversions + {CUBE}.skad_event_4_conversions
+        type: sum
+
+      - name: skad_coarse_conversion_values_null_0
+        title: SKAN Coarse Conversion Value 0 Null
+        sql: |-
+          {CUBE}.skad_coarse_conversion_values_null_0
+        type: sum
+
+      - name: skad_coarse_conversion_values_none_0
+        title: SKAN Coarse Conversion Value 0 None
+        sql: |-
+          {CUBE}.skad_coarse_conversion_values_none_0
+        type: sum
+
+      - name: skad_coarse_conversion_values_low_0
+        title: SKAN Coarse Conversion Value 0 Low
+        sql: |-
+          {CUBE}.skad_coarse_conversion_values_low_0
+        type: sum
+
+      - name: skad_coarse_conversion_values_medium_0
+        title: SKAN Coarse Conversion Value 0 Medium
+        sql: |-
+          {CUBE}.skad_coarse_conversion_values_medium_0
+        type: sum
+
+      - name: skad_coarse_conversion_values_high_0
+        title: SKAN Coarse Conversion Value 0 High
+        sql: |-
+          {CUBE}.skad_coarse_conversion_values_high_0
+        type: sum
+
+      - name: skad_coarse_conversion_values_null_1
+        title: SKAN Coarse Conversion Value 1 Null
+        sql: |-
+          {CUBE}.skad_coarse_conversion_values_null_1
+        type: sum
+
+      - name: skad_coarse_conversion_values_none_1
+        title: SKAN Coarse Conversion Value 1 None
+        sql: |-
+          {CUBE}.skad_coarse_conversion_values_none_1
+        type: sum
+
+      - name: skad_coarse_conversion_values_low_1
+        title: SKAN Coarse Conversion Value 1 Low
+        sql: |-
+          {CUBE}.skad_coarse_conversion_values_low_1
+        type: sum
+
+      - name: skad_coarse_conversion_values_medium_1
+        title: SKAN Coarse Conversion Value 1 Medium
+        sql: |-
+          {CUBE}.skad_coarse_conversion_values_medium_1
+        type: sum
+
+      - name: skad_coarse_conversion_values_high_1
+        title: SKAN Coarse Conversion Value 1 High
+        sql: |-
+          {CUBE}.skad_coarse_conversion_values_high_1
+        type: sum
+
+      - name: skad_coarse_conversion_values_null_2
+        title: SKAN Coarse Conversion Value 2 Null
+        sql: |-
+          {CUBE}.skad_coarse_conversion_values_null_2
+        type: sum
+
+      - name: skad_coarse_conversion_values_none_2
+        title: SKAN Coarse Conversion Value 2 None
+        sql: |-
+          {CUBE}.skad_coarse_conversion_values_none_2
+        type: sum
+
+      - name: skad_coarse_conversion_values_low_2
+        title: SKAN Coarse Conversion Value 2 Low
+        sql: |-
+          {CUBE}.skad_coarse_conversion_values_low_2
+        type: sum
+
+      - name: skad_coarse_conversion_values_medium_2
+        title: SKAN Coarse Conversion Value 2 Medium
+        sql: |-
+          {CUBE}.skad_coarse_conversion_values_medium_2
+        type: sum
+
+      - name: skad_coarse_conversion_values_high_2
+        title: SKAN Coarse Conversion Value 2 High
+        sql: |-
+          {CUBE}.skad_coarse_conversion_values_high_2
+        type: sum
+
+      - name: network_ad_spend_skan
+        title: SKAN Network Ad Spend
+        sql: |-
+          {CUBE}.network_ad_spend_skan
+        type: sum
+        format: currency
+        currency: EUR
+
+################################################################## Adjust Conversions
+      - name: adjust_d0_created_account_conversions
+        title: ADJUST REPORTED D0 Created Account Conversions
+        description: Do not use this metric except to compare with the Adjust UI. These values are not accurate for actual reporting.
+        sql: |-
+          {CUBE}.d0_created_account_conversions
+        type: sum
+
+      - name: adjust_d0_free_trial_conversions
+        title: ADJUST REPORTED D0 Free Trial Conversions
+        description: Do not use this metric except to compare with the Adjust UI. These values are not accurate for actual reporting.
+        sql: |-
+          {CUBE}.d0_free_trial_conversions
+        type: sum
+
+      - name: adjust_d0_1m_subscription_conversions
+        title: ADJUST REPORTED D0 1m Subscription Conversions
+        description: Do not use this metric except to compare with the Adjust UI. These values are not accurate for actual reporting.
+        sql: |-
+          {CUBE}.d0_1m_subscription_conversions
+        type: sum
+
+      - name: adjust_d0_12m_subscription_conversions
+        title: ADJUST REPORTED D0 12m Subscription Conversions
+        description: Do not use this metric except to compare with the Adjust UI. These values are not accurate for actual reporting.
+        sql: |-
+          {CUBE}.d0_12m_subscription_conversions
+        type: sum
+
+      - name: total_adjust_d0_conversions
+        title: ADJUST REPORTED Total D0 Conversions
+        description: "Adjust reported D0 Free Trials + D0 1m Subs + D0 12m Subs"
+        sql: |-
+          {adjust_d0_free_trial_conversions} + {adjust_d0_1m_subscription_conversions} + {adjust_d0_12m_subscription_conversions}
+        type: number
+
+      - name: adjust_d7_created_account_conversions
+        title: ADJUST REPORTED D7 Created Account Conversions
+        description: Do not use this metric except to compare with the Adjust UI. These values are not accurate for actual reporting.
+        sql: |-
+          {CUBE}.d7_created_account_conversions
+        type: sum
+
+      - name: adjust_d7_free_trial_conversions
+        title: ADJUST REPORTED D7 Free Trial Conversions
+        description: Do not use this metric except to compare with the Adjust UI. These values are not accurate for actual reporting.
+        sql: |-
+          {CUBE}.d7_free_trial_conversions
+        type: sum
+
+      - name: adjust_d7_1m_subscription_conversions
+        title: ADJUST REPORTED D7 1m Subscription Conversions
+        description: Do not use this metric except to compare with the Adjust UI. These values are not accurate for actual reporting.
+        sql: |-
+          {CUBE}.d7_1m_subscription_conversions
+        type: sum
+
+      - name: adjust_d7_12m_subscription_conversions
+        title: ADJUST REPORTED D7 12m Subscription Conversions
+        description: Do not use this metric except to compare with the Adjust UI. These values are not accurate for actual reporting.
+        sql: |-
+          {CUBE}.d7_12m_subscription_conversions
+        type: sum
+
+################################################################## Cost-Per Metrics
+      - name: CPM
+        description: Cost per 1000 Impressions
+        title: "CPM"
+        sql: |-
+          {ad_spend} / NULLIF({impressions},0) * 1000
+        type: number
+        format: currency
+        currency: EUR
+
+      - name: CPC
+        description: Cost per Click
+        title: "CPC"
+        sql: |-
+          {ad_spend} / NULLIF({clicks},0)
+        type: number
+        format: currency
+        currency: EUR
+
+      - name: CPI
+        description: Using Adjust installs
+        title: "CPI"
+        sql: |-
+          {ad_spend} / NULLIF({adjust_installs},0)
+        type: number
+        format: currency
+        currency: EUR
+
+      - name: CPR
+        description: Cost per Registration
+        title: "CPR"
+        sql: |-
+          {ad_spend} / NULLIF({d0_created_account_conversions},0)
+        type: number
+        format: currency
+        currency: EUR
+
+      - name: CPFT
+        description: Cost per Free Trial
+        title: "CPFT"
+        sql: |-
+          {ad_spend} / NULLIF({d0_free_trial_conversions},0)
+        type: number
+        format: currency
+        currency: EUR
+
+      - name: CPD0C
+        description: Cost per D0 Conversion
+        title: "CPD0C"
+        sql: |-
+          {ad_spend} / NULLIF({total_d0_subscription_conversions},0)
+        type: number
+        format: currency
+        currency: EUR
+
+      - name: CPD7PC
+        description: Cost per D7 Paid Conversion
+        title: "CPD7PC"
+        sql: |-
+          {ad_spend_d7} / NULLIF({total_d7_paid_conversions},0)
+        type: number
+        format: currency
+        currency: EUR
+
+################################################################## LTV:CAC
+      - name: predicted_d360_conversions
+        title: D360 Predicted Conversions
+        sql: |-
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.predicted_backend_d360_conversions
+          ELSE {CUBE}.predicted_d360_conversions
+          END
+        type: sum
+
+      - name: predicted_d360_total_ltv
+        title: D360 Predicted Total LTV
+        sql: |-
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.predicted_backend_d360_total_ltv
+          ELSE {CUBE}.predicted_d360_total_ltv
+          END
+        type: sum
+        format: currency
+        currency: EUR
+
+      - name: paid_predicted_d360_total_ltv
+        title: Paid D360 Pred. Total LTV
+        sql: |-
+          CASE WHEN {CUBE}.date >= DATE('2024-01-01') THEN {CUBE}.predicted_backend_d360_total_ltv
+          ELSE {CUBE}.predicted_d360_total_ltv
+          END
+        type: sum
+        format: currency
+        currency: EUR
+        public: false
+        filters:
+          - sql: "{source_type} = 'paid'"
+
+      - name: d360_d7_ccm
+        title: D360/D7 CCM
+        sql: |-
+          {predicted_d360_conversions} / NULLIF({total_d7_paid_conversions},0)
+        type: number
+
+      - name: d360_d0_ccm
+        title: D360/D0 CCM
+        sql: |-
+          {predicted_d360_conversions} / NULLIF({total_d0_subscription_conversions},0)
+        type: number
+
+      - name: predicted_d360_cac
+        title: D360 Predicted CAC
+        sql: |-
+          {ad_spend_d7} / NULLIF({predicted_d360_conversions},0)
+        type: number
+        format: currency
+        currency: EUR
+
+      - name: predicted_d360_ltv
+        title: LTV
+        description: Average 3-Year LTV of D360 predicted converted users
+        sql: |-
+          {predicted_d360_total_ltv} / NULLIF({predicted_d360_conversions},0)
+        type: number
+        format: currency
+        currency: EUR
+
+      - name: predicted_d360_ltv_to_cac_ratio
+        title: "LTV:CAC Ratio"
+        sql: |-
+          {predicted_d360_total_ltv} / NULLIF({ad_spend_d7},0)
+        type: number
+
+      - name: predicted_d360_paid_ltv_to_cac_ratio
+        title: "Paid LTV:CAC Ratio"
+        sql: |-
+          {paid_predicted_d360_total_ltv} / NULLIF({ad_spend_d7},0)
+        type: number
+
+################################################################## Rate Metrics
+      - name: click_through_rate
+        description: Total clicks / total impressions
+        sql: |-
+          CAST({clicks} AS DOUBLE) / NULLIF({impressions},0)
+        type: number
+        format: percent
+
+      - name: cvr_to_install
+        title: CVR to Install
+        description: Total installs / total clicks
+        sql: |-
+          CAST({adjust_installs} AS DOUBLE) / NULLIF({clicks},0)
+        type: number
+        format: percent
+
+      - name: adjust_d0_conversion_rate_to_registration
+        title: D0 CVR to Registration
+        description: Conversion Rate from Install to Registration on D0
+        sql: |-
+          CAST({d0_created_account_conversions} AS DOUBLE) / NULLIF({adjust_installs},0)
+        type: number
+        format: percent
+
+      - name: adjust_d0_conversion_rate
+        title: D0 CVR - Adjust Attribution
+        description: Conversion Rate from Install to Free Trial/1m Subscription purchase on D0
+        sql: |-
+          CAST({total_d0_subscription_conversions} AS DOUBLE) / NULLIF({adjust_installs},0)
+        type: number
+        format: percent
+
+      - name: adjust_d7_conversion_rate
+        title: D7 CVR - Adjust Attribution
+        description: Conversion Rate from Install to Paid Subscription purchase on D7
+        sql: |-
+          CAST({total_d7_paid_conversions} AS DOUBLE) / NULLIF({adjust_installs},0)
+        type: number
+        format: percent
+
+      - name: skad_d0_conversion_rate
+        title: D0 CVR - SKAdNetwork Attribution
+        description: Conversion Rate from Install to Free Trial/1m Subscription purchase on D0
+        sql: |-
+          CAST({total_skad_d0_conversions} AS DOUBLE) / NULLIF({skad_installs},0)
+        type: number
+        format: percent
