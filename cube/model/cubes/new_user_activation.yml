@@ -10,6 +10,13 @@ cubes:
         relationship: one_to_one
         sql: "{CUBE}.analytics_id = {users.analytics_id}"
 
+    # Only SQL API users whose security context maps to the "people" group
+    # (via contextToGroups in cube.js) can see or query this cube.
+    access_policy:
+      - group: people
+        member_level:
+          includes: "*"
+
     dimensions:
       - name: analytics_id
         sql: analytics_id
