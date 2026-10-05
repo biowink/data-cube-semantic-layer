@@ -48,12 +48,6 @@ cubes:
         sql: "{CUBE}.count_m2_sessions > 0"
         type: boolean
 
-#      - name: is_m2_tracking_retained
-#        title: "Is M2 Tracking Retained"
-#        description: "Whether a user created a tracking point in M2 (Days 31 to 60)"
-#        sql: "{CUBE}.count_m2_tracking_points > 0"
-#        type: boolean
-
       # Weekly retention metrics
       - name: count_w2_sessions
         description: "Number of sessions a user had in W2 (Days 8 to 14)"
@@ -122,14 +116,6 @@ cubes:
         type: avg
         meta:
           format: percent_1
-
-#      - name: m2_tracking_retention
-#        title: "M2 Tracking Retention"
-#        description: "The share of users creating a tracking point in M2 (Days 31 to 60)"
-#        sql: "CAST(LEAST({CUBE}.count_m2_tracking_points, 1) AS DOUBLE)"
-#        type: avg
-#        meta:
-#          format: percent_1
 
       - name: d1_retention
         description: "The share of users with a session on D1"
