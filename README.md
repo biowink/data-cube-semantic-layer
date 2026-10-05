@@ -127,6 +127,51 @@ If a field or cube is supposed to be hidden and still shows up in step 3, that's
 4. Open (or create) a question against `sales` and confirm it still runs correctly — this exercises the same production-mode query path as the `psql` check in step 4 above, through Metabase's actual query path instead.
 5. When you revert Cube back to dev mode (step 5 above), Metabase's connection will keep using the production credentials, but dev mode accepts any credentials so it'll keep working — just **re-sync the schema again** to see the full table list reappear.
 
+### Adding a separate SQL connection (per-group access)
+
+Metabase talks to Cube's SQL API, not to Athena, so every Metabase connection hits the same `cube:15432` endpoint. A Cube `data_source:` only changes which Athena connection Cube uses behind that endpoint — it does **not** give you a separately controllable connection. To give a Metabase connection access to only some cubes/views, give it its own SQL API user and restrict cubes to that user's group with `access_policy`.
+
+**How it's wired up:**
+
+- `cube/cube.js` defines the SQL API users. `checkSqlAuth` checks the login against env vars and attaches the user's groups to the security context; `contextToGroups` passes those groups to `access_policy`:
+  | User (env vars) | Groups |
+  |---|---|
+  | `CUBEJS_SQL_USER` / `CUBEJS_SQL_PASSWORD` | none |
+  | `CUBEJS_PEOPLE_SQL_USER` / `CUBEJS_PEOPLE_SQL_PASSWORD` | `people` |
+
+  A user whose env vars aren't set is skipped. Any other username/password gets `Access denied` (shown as `Auth Error` in the Cube logs).
+- Add the new user to `cube/.env` (see `.env.example`):
+  ```bash
+  CUBEJS_PEOPLE_SQL_USER=peopleuser
+  CUBEJS_PEOPLE_SQL_PASSWORD=<choose a password>
+  ```
+- Restrict a cube or view to the group:
+  ```yaml
+  cubes:
+    - name: new_user_activation
+      # ...
+      access_policy:
+        - group: people
+          member_level:
+            includes: "*"
+  ```
+  Only users in `people` can see or query it. Cubes/views **without** an `access_policy` stay visible to every user, including the new one — so if a connection should see *only* certain cubes, every other exposed cube/view needs a policy too. When a cube is queried through a view, the view's policy applies, not the cube's.
+
+**To add another user/group:** add an entry to `sqlUsers` in `cube/cube.js` with its own env vars and `groups`, add the env vars to `.env` / `.env.example`, and reference the group in `access_policy`.
+
+**Testing it** (needs production mode, steps 1-2 of the section above — dev mode skips all auth and policies, and the Playground is only available in dev mode, so a restricted cube will always appear there):
+
+1. Restart Cube so it picks up `.env` and `cube.js`: `docker compose up -d cube`
+2. Compare what each user can see:
+   ```bash
+   cd cube && set -a && . ./.env && set +a   # load the passwords from .env
+   docker run --rm --network cube_default postgres:16 psql \
+     "postgresql://testuser:$CUBEJS_SQL_PASSWORD@cube:15432/cube" -c "\dt"          # no restricted cube
+   docker run --rm --network cube_default postgres:16 psql \
+     "postgresql://peopleuser:$CUBEJS_PEOPLE_SQL_PASSWORD@cube:15432/cube" -c "\dt" # includes it
+   ```
+3. In Metabase, add a second database: same settings as the existing Cube connection (host `cube`, port `15432`, database `cube`), but with the `CUBEJS_PEOPLE_SQL_USER` / `CUBEJS_PEOPLE_SQL_PASSWORD` credentials. Sync both connections and check that each only lists what its user is allowed to see. Control who can use each connection with Metabase's own **Admin → Permissions**.
+
 ### Testing with Metabase
 
 **Re-syncing after a model change:** Metabase caches its own copy of Cube's table/column list. After changing cubes/views, refresh it without touching the connection itself:
