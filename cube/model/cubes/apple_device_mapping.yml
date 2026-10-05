@@ -1,0 +1,22 @@
+cubes:
+  - name: apple_device_mapping
+    sql_table: static.apple_device_mapping
+    description: "Maps Apple model identifiers to product names and families. Migrated from views/apple_device_mapping.view.lkml"
+
+    dimensions:
+      - name: model_identifier
+        sql: model_identifier
+        type: string
+        primary_key: true
+        public: false
+        description: "Apple's internal device identifier, e.g. 'iPhone14,5'. Exposed on-device via UIDevice/uname() and commonly collected by MDM, analytics SDKs, or user-agent strings."
+
+      - name: apple_device_name
+        sql: product_name
+        type: string
+        description: "Human-readable Apple product name, e.g. 'iPhone 13'."
+
+      - name: apple_device_family
+        sql: device_family
+        type: string
+        description: "High-level product line: iPhone, iPad, iPod, Apple Watch, or Simulator."
