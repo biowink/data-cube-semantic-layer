@@ -1,0 +1,35 @@
+cubes:
+  - name: user_birth_control
+    sql_table: user_metrics.user_last_birth_control_settings
+    description: "Migrated from views/users/user_birth_control.view.lkml"
+
+    dimensions:
+      - name: analytics_id
+        sql: analytics_id
+        type: string
+        primary_key: true
+        public: false
+
+      # dimension_group: created_at (date, week, month, year) - all native Cube granularities
+      - name: created_at
+        sql: created_at
+        type: time
+
+      - name: birth_control_type
+        sql: "{CUBE}.type"
+        type: string
+
+      - name: is_hormonal
+        sql: >
+          CASE WHEN {CUBE}.type IN ('awareness', 'condom', 'copper_iud', 'other') THEN 'Non-Hormonal'
+               WHEN {CUBE}.type IN ('combined_pill', 'hormonal_iud', 'implant', 'mini_pill', 'patch', 'shot', 'vaginal_ring') THEN 'Hormonal'
+          END
+        type: string
+
+      - name: birth_control_variant
+        sql: variant
+        type: string
+
+      - name: birth_control_schedule
+        sql: schedule
+        type: string
