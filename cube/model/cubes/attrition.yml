@@ -1,0 +1,202 @@
+cubes:
+  - name: attrition
+    sql_table: people.attrition
+    description: "Monthly employee headcount, hires and exits (BambooHR), one row per employee per month. HR data - restricted to the people group."
+
+    # NOTE: despite their names, people.attrition's termination_*_id columns hold
+    # labels (e.g. "Resignation (Voluntary)"), not BambooHR ids, so they're exposed
+    # directly as termination_type / termination_reason and the people.*_mapping
+    # lookup tables aren't joined.
+
+    # Demographics come from the BambooHR snapshot taken on the month's reference
+    # date. Snapshots only exist from 2026-10-08, so earlier months have no match.
+    joins:
+      - name: employee_snapshot
+        relationship: one_to_one
+        sql: >
+          {CUBE}.employee_id = {employee_snapshot}.employee_id
+          AND {CUBE}.reference_date = {employee_snapshot}.snapshot_date
+
+    # Employee-level HR data: only SQL API users in the "people" group
+    # (see cube.js) can see or query this cube.
+    access_policy:
+      - group: people
+        member_level:
+          includes: "*"
+
+    dimensions:
+      - name: pk
+        sql: "CONCAT({CUBE}.employee_id, '|', CAST({CUBE}.month_start AS VARCHAR))"
+        type: string
+        primary_key: true
+        public: false
+
+      - name: employee_id
+        sql: employee_id
+        type: string
+        public: false
+
+      - name: month_start
+        title: "Month"
+        sql: "CAST({CUBE}.month_start AS TIMESTAMP)"
+        type: time
+
+      - name: reference_date
+        sql: "CAST({CUBE}.reference_date AS TIMESTAMP)"
+        type: time
+
+      - name: exit_date
+        sql: "CAST({CUBE}.exit_date AS TIMESTAMP)"
+        type: time
+
+      - name: is_partial_month
+        description: "The month is still in progress, so its numbers are not final"
+        sql: is_partial_month
+        type: boolean
+
+      # Filter on true for the current workforce (headcount, tenure distribution).
+      - name: is_active_at_end
+        description: "The employee was active at the end of the month (or today, for the current month)"
+        sql: "({CUBE}.active_at_end = 1)"
+        type: boolean
+
+      # Org
+      - name: department
+        sql: department
+        type: string
+        meta:
+          group_label: "Org"
+
+      - name: division
+        sql: division
+        type: string
+        meta:
+          group_label: "Org"
+
+      - name: location
+        sql: location
+        type: string
+        meta:
+          group_label: "Org"
+
+      - name: location_group
+        description: "Berlin / Germany outside Berlin / Outside Germany. 'Unknown' if the location is missing, 'Unmapped' if it has no group."
+        sql: "CASE WHEN {CUBE}.location IS NULL THEN 'Unknown' ELSE COALESCE({CUBE}.location_group, 'Unmapped') END"
+        type: string
+        meta:
+          group_label: "Org"
+
+      - name: job_title
+        sql: job_title
+        type: string
+        meta:
+          group_label: "Org"
+
+      - name: tenure_months
+        sql: tenure_months
+        type: number
+
+      - name: tenure_band
+        sql: >
+          CASE WHEN {CUBE}.tenure_months < 12 THEN '1. < 1 year'
+               WHEN {CUBE}.tenure_months < 24 THEN '2. 1-2 years'
+               WHEN {CUBE}.tenure_months < 36 THEN '3. 2-3 years'
+               WHEN {CUBE}.tenure_months < 60 THEN '4. 3-5 years'
+               ELSE '5. 5+ years'
+          END
+        type: string
+
+      # Termination
+      - name: termination_type
+        sql: termination_type_id
+        type: string
+        meta:
+          group_label: "Termination"
+
+      - name: termination_reason
+        sql: termination_reason_id
+        type: string
+        meta:
+          group_label: "Termination"
+
+    measures:
+      - name: count
+        type: count
+
+      - name: headcount_start
+        description: "Employees active at the start of the month"
+        sql: active_at_start
+        type: sum
+
+      - name: headcount_end
+        description: "Employees active at the end of the month"
+        sql: active_at_end
+        type: sum
+
+      - name: hires
+        sql: hires
+        type: sum
+
+      - name: rehires
+        sql: rehires
+        type: sum
+
+      - name: exits
+        sql: exits
+        type: sum
+
+      # Average headcount is computed in two steps: per month (start + end) / 2,
+      # then averaged over the months in the period. Each row contributes its share
+      # of the month's (start + end) / 2 - 1 for a full month, 0.5 for a hire or exit.
+      - name: person_months
+        description: "Sum of monthly average headcounts over the period"
+        sql: "({CUBE}.active_at_start + {CUBE}.active_at_end) / 2.0"
+        type: sum
+        public: false
+
+      - name: months
+        sql: month_start
+        type: count_distinct
+        public: false
+
+      - name: avg_headcount
+        description: "Average monthly headcount over the period. Per month: (start + end of month headcount) / 2."
+        sql: "{person_months} / NULLIF({months}, 0)"
+        type: number
+
+      - name: attrition_rate
+        description: "Exits divided by average monthly headcount. Monthly or yearly depending on the month_start granularity; exclude partial months for final numbers."
+        sql: "CAST({exits} AS DOUBLE) / NULLIF({avg_headcount}, 0)"
+        type: number
+        meta:
+          format: percent_1
+
+      # Rolling 12 months: query with month_start at month granularity, and filter
+      # is_partial_month = false so the current month isn't in the window.
+      - name: exits_12m
+        sql: exits
+        type: sum
+        rolling_window:
+          trailing: 12 month
+        public: false
+
+      - name: person_months_12m
+        sql: "({CUBE}.active_at_start + {CUBE}.active_at_end) / 2.0"
+        type: sum
+        rolling_window:
+          trailing: 12 month
+        public: false
+
+      - name: months_12m
+        sql: month_start
+        type: count_distinct
+        rolling_window:
+          trailing: 12 month
+        public: false
+
+      - name: rolling_12m_attrition_rate
+        description: "Exits in the trailing 12 months divided by the average monthly headcount over those months"
+        sql: "CAST({exits_12m} AS DOUBLE) / NULLIF({person_months_12m} / NULLIF({months_12m}, 0), 0)"
+        type: number
+        meta:
+          format: percent_1
