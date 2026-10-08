@@ -1,0 +1,25 @@
+views:
+  - name: people_age
+    description: >
+      Headcount by age band (BambooHR). Filter is_active_at_end = true and pick a
+      month - demographics are only available from 2026-10-08, when snapshots started.
+      Gender and age are in separate views on purpose, so they can't be combined.
+
+    # Views are the security boundary: when queried through this view, this
+    # access_policy applies, not the ones on the underlying cubes.
+    access_policy:
+      - group: people
+        member_level:
+          includes: "*"
+
+    cubes:
+      - join_path: attrition
+        includes:
+          - month_start
+          - is_partial_month
+          - is_active_at_end
+          - headcount_end
+
+      - join_path: attrition.employee_snapshot
+        includes:
+          - age_band
