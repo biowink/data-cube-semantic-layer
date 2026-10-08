@@ -1,0 +1,37 @@
+cubes:
+  - name: employee_snapshot
+    sql_table: people.raw_bamboohr_employee_snapshot
+    public: false
+    description: "Daily BambooHR employee snapshot (gender, date of birth). Joined from attrition on the month's reference date; only exposed through the people_gender / people_age views."
+
+    # Employee-level HR data: only SQL API users in the "people" group
+    # (see cube.js) can see or query this cube.
+    access_policy:
+      - group: people
+        member_level:
+          includes: "*"
+
+    dimensions:
+      - name: pk
+        sql: "CONCAT({CUBE}.employee_id, '|', CAST({CUBE}.snapshot_date AS VARCHAR))"
+        type: string
+        primary_key: true
+        public: false
+
+      - name: gender
+        sql: "COALESCE({CUBE}.gender, 'Not specified')"
+        type: string
+
+      # date_of_birth itself is never exposed - only the band, as of the snapshot date
+      - name: age_band
+        sql: >
+          CASE
+            WHEN {CUBE}.date_of_birth IS NULL THEN 'Not specified'
+            WHEN DATE_DIFF('year', {CUBE}.date_of_birth, {CUBE}.snapshot_date) < 25 THEN '< 25'
+            WHEN DATE_DIFF('year', {CUBE}.date_of_birth, {CUBE}.snapshot_date) < 30 THEN '25-29'
+            WHEN DATE_DIFF('year', {CUBE}.date_of_birth, {CUBE}.snapshot_date) < 35 THEN '30-34'
+            WHEN DATE_DIFF('year', {CUBE}.date_of_birth, {CUBE}.snapshot_date) < 40 THEN '35-39'
+            WHEN DATE_DIFF('year', {CUBE}.date_of_birth, {CUBE}.snapshot_date) < 50 THEN '40-49'
+            ELSE '50+'
+          END
+        type: string
