@@ -54,6 +54,14 @@ cubes:
         sql: is_partial_month
         type: boolean
 
+      # Filter on true with month_start grouped by quarter to get end-of-quarter
+      # headcount (Sum of headcount_end). The current month counts as the latest
+      # point of the current quarter until the quarter ends.
+      - name: is_quarter_end_month
+        description: "March, June, September, December - or the current month, as the latest point of the current quarter"
+        sql: "(MONTH({CUBE}.month_start) % 3 = 0 OR {CUBE}.is_partial_month)"
+        type: boolean
+
       # Filter on true for the current workforce (headcount, tenure distribution).
       - name: is_active_at_end
         description: "The employee was active at the end of the month (or today, for the current month)"
