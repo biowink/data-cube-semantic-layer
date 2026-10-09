@@ -1,0 +1,82 @@
+cubes:
+  - name: absence
+    sql_table: people.absence
+    public: false
+    description: "Time off (BambooHR) per employee per month, against expected Mon-Fri working days. Includes all time off, vacation too - the extract has no time-off type. History starts 2026-07-08. Exposed through the people_absence view."
+
+    # Same employee-month grain as attrition, so org attributes (department,
+    # location group, tenure band, ...) come from there rather than being copied here.
+    joins:
+      - name: attrition
+        relationship: one_to_one
+        sql: "{CUBE}.employee_id = {attrition}.employee_id AND {CUBE}.month_start = {attrition}.month_start"
+
+    # Employee-level HR data: only SQL API users in the "people" group
+    # (see cube.js) can see or query this cube.
+    access_policy:
+      - group: people
+        member_level:
+          includes: "*"
+
+    dimensions:
+      - name: pk
+        sql: "CONCAT({CUBE}.employee_id, '|', CAST({CUBE}.month_start AS VARCHAR))"
+        type: string
+        primary_key: true
+        public: false
+
+      - name: employee_id
+        sql: employee_id
+        type: string
+        public: false
+
+      - name: month_start
+        title: "Month"
+        sql: "CAST({CUBE}.month_start AS TIMESTAMP)"
+        type: time
+
+      - name: is_partial_month
+        description: "The month is still in progress, so its numbers are not final"
+        sql: is_partial_month
+        type: boolean
+
+    measures:
+      - name: expected_days
+        description: "Mon-Fri working days the employees were active (public holidays not excluded)"
+        sql: expected_days
+        type: sum
+
+      - name: absence_days
+        description: "Days of time off on expected working days (hours / 8, capped at 1 day per employee per day)"
+        sql: absence_days
+        type: sum
+
+      - name: absence_rate
+        description: "Absence days divided by expected working days"
+        sql: "CAST({absence_days} AS DOUBLE) / NULLIF({expected_days}, 0)"
+        type: number
+        meta:
+          format: percent_1
+
+      # Every active employee has a row each month, including months without time off
+      - name: employee_months
+        type: count
+        public: false
+
+      - name: absence_days_per_employee
+        description: "Average absence days per employee per month"
+        sql: "CAST({absence_days} AS DOUBLE) / NULLIF({employee_months}, 0)"
+        type: number
+
+      - name: employees_with_absence
+        description: "Employee-months with at least some time off. Grouped by month: employees who took time off that month."
+        type: count
+        filters:
+          - sql: "{CUBE}.absence_days > 0"
+
+      - name: share_with_absence
+        description: "Share of employees who took any time off in the month"
+        sql: "CAST({employees_with_absence} AS DOUBLE) / NULLIF({employee_months}, 0)"
+        type: number
+        meta:
+          format: percent_1

@@ -1,0 +1,33 @@
+views:
+  - name: people_absence
+    description: >
+      Time off as a share of expected working days (BambooHR), by month, with org
+      breakdowns from attrition. Includes vacation. History starts 2026-07-08 -
+      July 2026 is a partial month. HR data - restricted to the people group.
+
+    # Views are the security boundary: when queried through this view, this
+    # access_policy applies, not the ones on the underlying cubes.
+    access_policy:
+      - group: people
+        member_level:
+          includes: "*"
+
+    cubes:
+      - join_path: absence
+        includes:
+          - month_start
+          - is_partial_month
+          - expected_days
+          - absence_days
+          - absence_rate
+          - absence_days_per_employee
+          - employees_with_absence
+          - share_with_absence
+
+      # Org breakdowns - add more attrition dimensions here as needed
+      - join_path: absence.attrition
+        includes:
+          - department
+          - division
+          - location_group
+          - tenure_band
