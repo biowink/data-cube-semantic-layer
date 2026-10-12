@@ -3,10 +3,16 @@ cubes:
     sql_table: der.adjust_campaign_performance
 
     dimensions:
+      - name: primary_key
+        sql: |-
+          {CUBE}.id
+        type: string
+        primaryKey: true
+
     # Dates
       - name: date
         sql: |-
-          {CUBE}.date
+          CAST({CUBE}.date AS timestamp)
         type: time
 
       - name: month_name
@@ -371,15 +377,6 @@ cubes:
         format: currency
         currency: EUR
         public: false
-
-      - name: ad_spend_usd
-        title: "Ad Spend USD"
-        description: Ad spend from TvScientific, reported in USD
-        sql: |-
-          {CUBE}.cost_in_usd
-        type: sum
-        format: currency
-        currency: USD
 
       - name: gdpr_forgets
         title: "GDPR Forgets"
