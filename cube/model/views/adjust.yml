@@ -10,7 +10,6 @@ views:
           - ad_spend_d30
           - ad_spend_d120
           - ad_spend_d360
-          - ad_spend_usd
 
     folders:
       - name: "Market"
