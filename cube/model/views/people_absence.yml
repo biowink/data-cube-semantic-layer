@@ -31,3 +31,4 @@ views:
           - division
           - location_group
           - tenure_band
+          - employment_status

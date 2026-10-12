@@ -18,6 +18,7 @@ views:
           - month_start
           - is_partial_month
           - is_active_at_end
+          - employment_status
           - headcount_end
 
       - join_path: attrition.employee_snapshot

@@ -100,6 +100,13 @@ cubes:
         meta:
           group_label: "Org"
 
+      - name: employment_status
+        description: "BambooHR employment status as of the month's reference date (e.g. Full-Time, Freelance)"
+        sql: employment_status
+        type: string
+        meta:
+          group_label: "Org"
+
       - name: tenure_months
         sql: tenure_months
         type: number
