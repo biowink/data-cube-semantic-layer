@@ -4,6 +4,36 @@ cubes:
     description: "Migrated from views/users/users.view.lkml"
     public: false
 
+    #todo: From the LookML users explore. Joins to views not yet migrated to cubes
+    # (user_first_properties, braze_global_control_group, user_account_source,
+    # user_subscription_status, user_last_device_properties,
+    # user_device_connections, dynamic_user_fields) are left out for now.
+    # market_mapping and apple_device_mapping join via user_last_properties.
+    joins:
+      - name: user_last_properties
+        relationship: one_to_one
+        sql: "{CUBE}.analytics_id = {user_last_properties.analytics_id}"
+
+      - name: user_profiles
+        relationship: one_to_one
+        sql: "{CUBE}.analytics_id = {user_profiles.analytics_id}"
+
+      - name: user_last_optional_consent_status
+        relationship: one_to_one
+        sql: "{CUBE}.analytics_id = {user_last_optional_consent_status.analytics_id}"
+
+      - name: new_user_activation
+        relationship: one_to_one
+        sql: "{CUBE}.analytics_id = {new_user_activation.analytics_id}"
+
+      - name: new_user_retention
+        relationship: one_to_one
+        sql: "{CUBE}.analytics_id = {new_user_retention.analytics_id}"
+
+      - name: adjust_attribution
+        relationship: one_to_one
+        sql: "{CUBE}.analytics_id = {adjust_attribution.analytics_id}"
+
     dimensions:
       - name: analytics_id
         sql: analytics_id
