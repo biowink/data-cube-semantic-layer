@@ -1,6 +1,7 @@
 cubes:
   - name: sessions
     sql_table: der.sessions
+    public: false
 
     joins:
       - name: users

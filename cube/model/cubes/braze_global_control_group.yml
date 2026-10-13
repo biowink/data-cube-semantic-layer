@@ -1,6 +1,7 @@
 cubes:
   - name: braze_global_control_group
     sql_table: der.braze_global_control_group_users
+    public: false
 
     joins:
       - name: users

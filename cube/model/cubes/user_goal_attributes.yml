@@ -1,6 +1,7 @@
 cubes:
   - name: user_goal_attributes
     sql_table: user_metrics.user_goal_attributes
+    public: false
 
     dimensions:
       - name: analytics_id
