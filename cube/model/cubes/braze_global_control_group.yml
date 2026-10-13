@@ -1,0 +1,34 @@
+cubes:
+  - name: braze_global_control_group
+    sql_table: der.braze_global_control_group_users
+
+    joins:
+      - name: users
+        relationship: one_to_one
+        sql: "{CUBE.analytics_id} = {users.analytics_id}"
+
+    dimensions:
+      - name: analytics_id
+        sql: "{CUBE}.analytics_id"
+        type: string
+        primary_key: true
+        public: false
+
+      - name: in_global_control_group
+        sql: "{CUBE}.analytics_id IS NOT NULL"
+        type: boolean
+
+      - name: entered_global_braze_test
+        sql: |-
+          CASE WHEN {users.backend_created_at} < TIMESTAMP '2024-09-30' THEN TIMESTAMP '2024-09-30' ELSE {users.backend_created_at} END
+        type: time
+
+      - name: in_global_braze_test
+        sql: |-
+          CASE WHEN {user_last_properties.session_ts} >= DATE '2024-04-01'
+          AND {user_last_properties.major_app_version} >= 100
+          AND {user_last_optional_consent_status.consent_usage_marketing} = TRUE
+          THEN TRUE
+          ELSE FALSE
+          END
+        type: boolean
