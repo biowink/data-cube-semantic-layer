@@ -43,7 +43,7 @@ cubes:
       # dimension_group: account_created -> base time dim + the timeframes Cube
       # can't derive at query time (day_of_week/day_of_month/day_of_year/week_of_year/month_num)
       - name: account_created_at
-        sql: backend_created_at
+        sql: "{CUBE}.backend_created_at"
         type: time
 
       - name: account_created_day_of_week
@@ -77,14 +77,14 @@ cubes:
       # (day/week/month/quarter) per-query natively, so no schema field is needed.
 
       - name: account_is_verified
-        sql: email_is_verified
+        sql: "{CUBE}.email_is_verified"
         type: boolean
 
       - name: is_test_user
-        sql: is_internal_user
+        sql: "{CUBE}.is_internal_user"
         type: boolean
 
     measures:
       - name: user_count
-        sql: analytics_id
+        sql: "{CUBE}.analytics_id"
         type: count_distinct
