@@ -1,10 +1,51 @@
 views:
-  - name: sessions_explore
-    description: "Sessions on Clue's client apps"
+  - name: sessions_view
+    description: "Sessions from the Clue app"
 
     cubes:
       - join_path: sessions
         includes: "*"
+
+      - join_path: sessions.users
+        includes: "*"
+        prefix: true
+
+      - join_path: sessions.users.user_last_properties
+        includes: "*"
+        prefix: true
+
+      - join_path: sessions.user_profiles
+        includes: "*"
+        prefix: true
+
+      - join_path: sessions.users.user_last_optional_consent_status
+        includes: "*"
+        prefix: true
+
+# commenting out this cube as it isn't built yet
+#      - join_path: sessions.users.user_subscription_status
+#        includes: "*"
+#        prefix: true
+
+      - join_path: sessions.adjust_attribution
+        includes: "*"
+        prefix: true
+
+      - join_path: sessions.users.braze_global_control_group
+        includes: "*"
+        prefix: true
+
+#      - join_path: sessions.user_account_source
+#        includes: "*"
+#        prefix: true
+
+      - join_path: sessions.users.user_last_properties.market_mapping
+        includes: "*"
+        prefix: true
+
+      - join_path: sessions.apple_device_mapping
+        includes: "*"
+        prefix: true
 
     folders:
       - name: "IDs"
