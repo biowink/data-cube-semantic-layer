@@ -13,22 +13,22 @@ views:
           includes: "*"
 
     cubes:
-      - join_path: absence
+      # Month and org breakdowns - add more attrition dimensions here as needed
+      - join_path: attrition
         includes:
           - month_start
           - is_partial_month
+          - department
+          - division
+          - location_group
+          - tenure_band
+          - employment_status
+
+      - join_path: attrition.absence
+        includes:
           - expected_days
           - absence_days
           - absence_rate
           - absence_days_per_employee
           - employees_with_absence
           - share_with_absence
-
-      # Org breakdowns - add more attrition dimensions here as needed
-      - join_path: absence.attrition
-        includes:
-          - department
-          - division
-          - location_group
-          - tenure_band
-          - employment_status

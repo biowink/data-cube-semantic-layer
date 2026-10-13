@@ -17,6 +17,30 @@ cubes:
           {CUBE}.employee_id = {employee_snapshot}.employee_id
           AND {CUBE}.reference_date = {employee_snapshot}.snapshot_date
 
+      # Time off, at the same employee-month grain. History starts 2026-07-08,
+      # so earlier months have no match.
+      - name: absence
+        relationship: one_to_one
+        sql: "{CUBE}.employee_id = {absence}.employee_id AND {CUBE}.month_start = {absence}.month_start"
+
+      # Pay rate valid on the month's reference date. valid_to is exclusive (the
+      # next period's valid_from), so each employee-month matches at most one period.
+      - name: compensation
+        relationship: many_to_one
+        sql: >
+          {CUBE}.employee_id = {compensation}.employee_id
+          AND {compensation}.valid_from <= CAST({CUBE}.reference_date AS DATE)
+          AND COALESCE({compensation}.valid_to, DATE '9999-12-31') > CAST({CUBE}.reference_date AS DATE)
+
+      # Pay rate valid on the month's reference date. valid_to is exclusive (the
+      # next period's valid_from), so each employee-month matches at most one period.
+      - name: compensation
+        relationship: many_to_one
+        sql: >
+          {CUBE}.employee_id = {compensation}.employee_id
+          AND {compensation}.valid_from <= CAST({CUBE}.reference_date AS DATE)
+          AND COALESCE({compensation}.valid_to, DATE '9999-12-31') > CAST({CUBE}.reference_date AS DATE)
+
     # Employee-level HR data: only SQL API users in the "people" group
     # (see cube.js) can see or query this cube.
     access_policy:
@@ -66,6 +90,22 @@ cubes:
       - name: is_active_at_end
         description: "The employee was active at the end of the month (or today, for the current month)"
         sql: "({CUBE}.active_at_end = 1)"
+        type: boolean
+
+      # Filter on true with count to get employees whose pay changed in the month.
+      - name: is_compensation_change_month
+        description: "The employee's compensation changed during the month"
+        sql: >
+          ({compensation.valid_from} >= CAST({CUBE}.month_start AS DATE)
+           AND {compensation.valid_from} < DATE_ADD('month', 1, CAST({CUBE}.month_start AS DATE)))
+        type: boolean
+
+      # Filter on true with count to get employees whose pay changed in the month.
+      - name: is_compensation_change_month
+        description: "The employee's compensation changed during the month"
+        sql: >
+          (CAST({compensation.valid_from} AS DATE) >= CAST({CUBE}.month_start AS DATE)
+           AND CAST({compensation.valid_from} AS DATE) < DATE_ADD('month', 1, CAST({CUBE}.month_start AS DATE)))
         type: boolean
 
       # Org

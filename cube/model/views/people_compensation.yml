@@ -1,0 +1,43 @@
+views:
+  - name: people_compensation
+    description: >
+      Pay rates and compensation changes (BambooHR), by month, with org breakdowns
+      from attrition. Aggregates only: rate measures are in rate_currency and are
+      empty for groups under 5 employees or with mixed currencies. Filter
+      is_active_at_end = true and pick a month. For employees whose pay changed,
+      filter is_compensation_change_month = true and use count. HR data -
+      restricted to the people group.
+
+    # Views are the security boundary: when queried through this view, this
+    # access_policy applies, not the ones on the underlying cubes.
+    access_policy:
+      - group: people
+        member_level:
+          includes: "*"
+
+    cubes:
+      # Month and org breakdowns - add more attrition dimensions here as needed
+      - join_path: attrition
+        includes:
+          - month_start
+          - is_partial_month
+          - is_active_at_end
+          - is_compensation_change_month
+          - count
+          - department
+          - division
+          - location_group
+          - tenure_band
+          - employment_status
+
+      - join_path: attrition.compensation
+        includes:
+          - rate_currency
+          - pay_type
+          - paid_per
+          - pay_schedule
+          - exempt
+          - change_reason
+          - employees_with_annual_rate
+          - avg_annual_rate
+          - median_annual_rate

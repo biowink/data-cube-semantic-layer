@@ -1,0 +1,113 @@
+cubes:
+  - name: compensation
+    sql_table: people.employee_compensation_history
+    public: false
+    description: "Compensation (BambooHR) validity periods, one row per employee per pay rate. Aggregates only - individual rates are never exposed. Exposed through the people_compensation view."
+
+    # Joined from attrition on the month's reference date, so month and org
+    # attributes come from there.
+
+    # Employee-level HR data: only SQL API users in the "people" group
+    # (see cube.js) can see or query this cube.
+    access_policy:
+      - group: people
+        member_level:
+          includes: "*"
+
+    dimensions:
+      - name: pk
+        sql: "CONCAT({CUBE}.employee_id, '|', CAST({CUBE}.valid_from AS VARCHAR))"
+        type: string
+        primary_key: true
+        public: false
+
+      - name: employee_id
+        sql: employee_id
+        type: string
+        public: false
+
+      - name: valid_from
+        sql: valid_from
+        type: time
+        public: false
+
+      # Individual rates are never exposed - only the aggregates below.
+      - name: rate_value
+        sql: rate_value
+        type: number
+        public: false
+
+      # Rate converted to a yearly amount, in rate_currency. Hourly and daily
+      # rates are left out (NULL): there's no reliable hours/days per year to scale by.
+      - name: annual_rate
+        sql: >
+          CASE UPPER({CUBE}.paid_per)
+               WHEN 'YEAR' THEN {CUBE}.rate_value
+               WHEN 'QUARTER' THEN {CUBE}.rate_value * 4
+               WHEN 'MONTH' THEN {CUBE}.rate_value * 12
+               WHEN 'WEEK' THEN {CUBE}.rate_value * 52
+          END
+        type: number
+        public: false
+
+      - name: rate_currency
+        description: "Currency of the pay rate. Group or filter by it - annual rate measures return nothing when currencies are mixed."
+        sql: rate_currency
+        type: string
+
+      - name: pay_type
+        sql: pay_type
+        type: string
+
+      - name: paid_per
+        sql: paid_per
+        type: string
+
+      - name: pay_schedule
+        sql: pay_schedule
+        type: string
+
+      - name: exempt
+        sql: exempt
+        type: string
+
+      - name: change_reason
+        description: "Reason for the most recent compensation change (as of the month)"
+        sql: change_reason
+        type: string
+
+
+    measures:
+      - name: employees_with_annual_rate
+        description: "Employees with a yearly-convertible rate (not hourly or daily)"
+        sql: "CASE WHEN {annual_rate} IS NOT NULL THEN {CUBE}.employee_id END"
+        type: count_distinct
+
+      - name: annual_rate_currencies
+        sql: "CASE WHEN {annual_rate} IS NOT NULL THEN {CUBE}.rate_currency END"
+        type: count_distinct
+        public: false
+
+      - name: avg_annual_rate_unsuppressed
+        sql: "{annual_rate}"
+        type: avg
+        public: false
+
+      # Rate measures are suppressed (NULL) for groups of fewer than 5 employees,
+      # so a small team's breakdown can't reveal someone's pay, and when the group
+      # mixes currencies, since the amounts can't be added up.
+      - name: avg_annual_rate
+        description: "Average annual pay rate, in rate_currency. Pick one month. Empty for groups under 5 employees or with mixed currencies."
+        sql: >
+          CASE WHEN {employees_with_annual_rate} >= 5 AND {annual_rate_currencies} = 1
+               THEN {avg_annual_rate_unsuppressed}
+          END
+        type: number
+
+      - name: median_annual_rate
+        description: "Median annual pay rate (approximate), in rate_currency. Pick one month. Empty for groups under 5 employees or with mixed currencies."
+        sql: >
+          CASE WHEN {employees_with_annual_rate} >= 5 AND {annual_rate_currencies} = 1
+               THEN APPROX_PERCENTILE({annual_rate}, 0.5)
+          END
+        type: number
