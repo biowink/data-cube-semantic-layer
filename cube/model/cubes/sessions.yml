@@ -1,0 +1,424 @@
+cubes:
+  - name: sessions
+    sql_table: der.sessions
+
+    joins:
+      - name: users
+        relationship: many_to_one
+        sql: "{CUBE.analytics_id} = {users.analytics_id}"
+
+    dimensions:
+      # --- IDs ---
+      - name: session_id
+        sql: "{CUBE}.session_id"
+        type: string
+        primary_key: true
+
+      - name: analytics_id
+        sql: "{CUBE}.analytics_id"
+        type: string
+
+      - name: device_id
+        sql: "{CUBE}.sp_device_id"
+        type: string
+
+      - name: subscription_started_transaction_id
+        sql: "{CUBE}.subscription_started_transaction_id"
+        type: string
+
+      # --- Session start (time) ---
+      - name: start_timestamp
+        title: "Session Start"
+        sql: "{CUBE}.session_start"
+        type: time
+
+      - name: start_date
+        title: "Session Start Date"
+        sql: "DATE_TRUNC('day', {CUBE}.session_start)"
+        type: time
+
+      - name: start_month_name
+        title: "Session Start Month Name"
+        sql: "DATE_FORMAT({CUBE}.session_start, '%M')"
+        type: string
+
+      - name: start_month_num
+        title: "Session Start Month Num"
+        sql: "MONTH({CUBE}.session_start)"
+        type: number
+
+      - name: start_day_of_month
+        title: "Session Start Day of Month"
+        sql: "DAY({CUBE}.session_start)"
+        type: number
+
+      - name: start_day_of_year
+        title: "Session Start Day of Year"
+        sql: "DAY_OF_YEAR({CUBE}.session_start)"
+        type: number
+
+      # --- since_previous_session (Looker type: duration -> trimmed to hours/days only) ---
+      - name: hours_since_previous_session
+        sql: "DATE_DIFF('hour', {CUBE}.previous_session_start, {start_date})"
+        type: number
+
+      - name: days_since_previous_session
+        sql: "DATE_DIFF('day', {CUBE}.previous_session_start, {start_date})"
+        type: number
+
+      - name: length_sec
+        title: "Session Length (in seconds)"
+        sql: "{CUBE}.session_length_sec"
+        type: number
+
+      - name: min_collector_tstamp
+        sql: "{CUBE}.min_collector_tstamp"
+        type: time
+        public: false
+
+      - name: session_index
+        sql: "{CUBE}.session_index"
+        type: number
+
+      - name: platform
+        sql: "{CUBE}.platform"
+        type: string
+
+      - name: has_account
+        sql: "{CUBE}.analytics_id IS NOT NULL"
+        type: boolean
+
+      - name: mode
+        sql: "{CUBE}.mode"
+        type: string
+
+      - name: is_pregnant
+        sql: "{CUBE}.mode = 'pregnant'"
+        type: boolean
+
+      - name: product_tier
+        sql: "{CUBE}.product_tier"
+        type: string
+
+      # --- App Version ---
+      - name: app_version
+        sql: "{CUBE}.app_version"
+        type: string
+
+      - name: major_app_version
+        sql: "{CUBE}.major_app_version"
+        type: number
+
+      - name: minor_app_version
+        sql: "{CUBE}.minor_app_version"
+        type: number
+
+      # --- Market ---
+      - name: country
+        sql: "{CUBE}.country_name"
+        type: string
+
+      - name: market
+        title: "Market (4)"
+        sql: |-
+          CASE
+          WHEN {country} = 'United States' THEN 'US'
+          WHEN {country} IN ('Austria', 'Belgium', 'Denmark', 'France', 'Germany', 'Ireland', 'Luxembourg', 'Netherlands', 'Norway', 'Sweden', 'Switzerland', 'United Kingdom', 'Italy', 'Spain') THEN 'Strategic Europe'
+          WHEN {country} IN ('Australia', 'Canada', 'Japan', 'New Zealand') THEN 'Strategic w/o US and Europe'
+          ELSE 'Rest of World'
+          END
+        type: string
+
+      - name: market_3
+        title: "Market (3)"
+        sql: |-
+          CASE
+          WHEN {market} = 'US' THEN 'US'
+          WHEN {market} IN ('Strategic Europe', 'Strategic w/o US and Europe') THEN 'Non-US Strategic'
+          ELSE 'Rest of World'
+          END
+        type: string
+
+      - name: latitude
+        sql: "{CUBE}.latitude"
+        type: number
+        public: false
+
+      - name: longitude
+        sql: "{CUBE}.longitude"
+        type: number
+        public: false
+
+      - name: location
+        type: geo
+        latitude:
+          sql: "{latitude}"
+        longitude:
+          sql: "{longitude}"
+        # Looker's `type: location` (sql_latitude/sql_longitude) maps to Cube's `type: geo`.
+
+      - name: device_model
+        sql: "{CUBE}.device_model"
+        type: string
+
+      # --- Language ---
+      - name: locale
+        sql: "{CUBE}.locale"
+        type: string
+
+      - name: language
+        sql: "{CUBE}.language"
+        type: string
+
+      - name: is_language_localised
+        description: "Whether a user's language is one of existing Clue localisation languages"
+        sql: |-
+          {language} IN ('English', 'Chinese', 'Danish', 'Dutch; Flemish', 'French', 'German', 'Hindi', 'Indonesian', 'Italian', 'Japanese', 'Norwegian', 'Polish', 'Portuguese', 'Russian', 'Spanish; Castilian', 'Swedish', 'Thai', 'Turkish', 'Vietnamese', 'Arabic', 'Malay', 'Romanian; Moldavian; Moldovan')
+        type: boolean
+
+      - name: localisation_language
+        description: "The existing Clue localised languages, with other languages grouped as Other"
+        sql: "CASE WHEN {is_language_localised} THEN {language} ELSE 'Other' END"
+        type: string
+
+      # --- OS Version ---
+      - name: os_version
+        sql: "{CUBE}.os_version"
+        type: string
+
+      - name: major_os_version
+        sql: "CAST(SPLIT_PART({CUBE}.os_version,'.', 1) AS INT)"
+        type: number
+
+      - name: minor_os_version
+        sql: "CAST(SPLIT_PART({CUBE}.os_version,'.', 2) AS INT)"
+        type: number
+
+      # --- since_account_created (Looker type: duration -> trimmed to hours/days only) ---
+      - name: hours_since_account_created
+        sql: "DATE_DIFF('hour', {users.account_created_date}, {start_date})"
+        type: number
+
+      - name: days_since_account_created
+        sql: "DATE_DIFF('day', {users.account_created_date}, {start_date})"
+        type: number
+
+      - name: user_age
+        sql: |-
+          CASE WHEN {days_since_account_created} = 0 THEN 'D0'
+          WHEN {days_since_account_created} IS NULL THEN 'No Account'
+          WHEN {days_since_account_created} BETWEEN 1 and 30 THEN 'D1-D30'
+          ELSE 'D31+'
+          END
+        type: string
+
+      # --- In Session Event Counts ---
+      - name: count_view_subscription_plans
+        sql: "{CUBE}.count_view_subscription_plans"
+        type: number
+
+      - name: count_change_mode
+        sql: "{CUBE}.count_change_mode"
+        type: number
+
+      - name: count_open_cycle_view
+        sql: "{CUBE}.count_open_cycle_view"
+        type: number
+
+      - name: count_open_calendar
+        sql: "{CUBE}.count_open_calendar"
+        type: number
+
+      - name: count_open_data_entry
+        sql: "{CUBE}.count_open_data_entry"
+        type: number
+
+      - name: count_exit_data_entry
+        sql: "{CUBE}.count_exit_data_entry"
+        type: number
+
+      - name: count_track_period
+        sql: "{CUBE}.count_track_period"
+        type: number
+
+      - name: count_open_analysis
+        sql: "{CUBE}.count_open_analysis"
+        type: number
+
+      - name: count_open_content_tab
+        sql: "{CUBE}.count_open_content_tab"
+        type: number
+
+      # --- In Session Event Booleans ---
+      - name: did_start_subscription
+        sql: "{CUBE}.subscription_started_transaction_id IS NOT NULL"
+        type: boolean
+
+      - name: did_view_subscription_plan
+        sql: "{count_view_subscription_plans} > 0"
+        type: boolean
+
+      - name: did_change_mode
+        sql: "{count_change_mode} > 0"
+        type: boolean
+
+      - name: did_open_cycle_view
+        sql: "{count_open_cycle_view} > 0"
+        type: boolean
+
+      - name: did_open_calendar
+        sql: "{count_open_calendar} > 0"
+        type: boolean
+
+      - name: did_open_data_entry
+        sql: "{count_open_data_entry} > 0"
+        type: boolean
+
+      - name: did_exit_data_entry
+        sql: "{count_exit_data_entry} > 0"
+        type: boolean
+
+      - name: did_track_period
+        sql: "{count_track_period} > 0"
+        type: boolean
+
+      - name: did_open_analysis
+        sql: "{count_open_analysis} > 0"
+        type: boolean
+
+      - name: did_open_content_tab
+        sql: "{count_open_content_tab} > 0"
+        type: boolean
+
+      - name: free_or_subscribed_this_session
+        sql: "{product_tier} = 'free' OR {did_start_subscription}"
+        type: boolean
+
+    measures:
+      - name: session_count
+        type: count
+
+      - name: user_count
+        sql: "{CUBE}.analytics_id"
+        type: count_distinct
+
+      - name: device_count
+        sql: "{CUBE}.sp_device_id"
+        type: count_distinct
+
+      # --- Sessions with x event ---
+      - name: started_subscription_sessions
+        type: count
+        filters:
+          - sql: "{did_start_subscription}"
+
+      - name: view_subscription_plan_sessions
+        type: count
+        filters:
+          - sql: "{did_view_subscription_plan}"
+
+      - name: change_mode_sessions
+        type: count
+        filters:
+          - sql: "{did_change_mode}"
+
+      - name: open_cycle_view_sessions
+        type: count
+        filters:
+          - sql: "{did_open_cycle_view}"
+
+      - name: open_calendar_sessions
+        type: count
+        filters:
+          - sql: "{did_open_calendar}"
+
+      - name: open_data_entry_sessions
+        type: count
+        filters:
+          - sql: "{did_open_data_entry}"
+
+      - name: exit_data_entry_sessions
+        type: count
+        filters:
+          - sql: "{did_exit_data_entry}"
+
+      - name: track_period_sessions
+        type: count
+        filters:
+          - sql: "{did_track_period}"
+
+      - name: open_analysis_sessions
+        type: count
+        filters:
+          - sql: "{did_open_analysis}"
+
+      - name: open_content_tab_sessions
+        type: count
+        filters:
+          - sql: "{did_open_content_tab}"
+
+      # --- Users with x event ---
+      - name: started_subscription_users
+        sql: "{CUBE}.analytics_id"
+        type: count_distinct
+        filters:
+          - sql: "{did_start_subscription}"
+
+      - name: view_subscription_plan_users
+        sql: "{CUBE}.analytics_id"
+        type: count_distinct
+        filters:
+          - sql: "{did_view_subscription_plan}"
+
+      - name: change_mode_users
+        sql: "{CUBE}.analytics_id"
+        type: count_distinct
+        filters:
+          - sql: "{did_change_mode}"
+
+      - name: open_cycle_view_users
+        sql: "{CUBE}.analytics_id"
+        type: count_distinct
+        filters:
+          - sql: "{did_open_cycle_view}"
+
+      - name: open_calendar_users
+        sql: "{CUBE}.analytics_id"
+        type: count_distinct
+        filters:
+          - sql: "{did_open_calendar}"
+
+      - name: open_data_entry_users
+        sql: "{CUBE}.analytics_id"
+        type: count_distinct
+        filters:
+          - sql: "{did_open_data_entry}"
+
+      - name: exit_data_entry_users
+        sql: "{CUBE}.analytics_id"
+        type: count_distinct
+        filters:
+          - sql: "{did_exit_data_entry}"
+
+      - name: track_period_users
+        sql: "{CUBE}.analytics_id"
+        type: count_distinct
+        filters:
+          - sql: "{did_track_period}"
+
+      - name: open_analysis_users
+        sql: "{CUBE}.analytics_id"
+        type: count_distinct
+        filters:
+          - sql: "{did_open_analysis}"
+
+      - name: open_content_tab_users
+        sql: "{CUBE}.analytics_id"
+        type: count_distinct
+        filters:
+          - sql: "{did_open_content_tab}"
+
+      - name: total_length_sec
+        title: "Total Session Length (in seconds)"
+        sql: "{length_sec}"
+        type: sum

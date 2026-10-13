@@ -1,0 +1,92 @@
+views:
+  - name: sessions_explore
+    description: "Sessions on Clue's client apps"
+
+    cubes:
+      - join_path: sessions
+        includes: "*"
+
+    folders:
+      - name: "IDs"
+        includes:
+          - session_id
+          - analytics_id
+          - device_id
+          - subscription_started_transaction_id
+
+      - name: "App Version"
+        includes:
+          - app_version
+          - major_app_version
+          - minor_app_version
+
+      - name: "Market"
+        includes:
+          - country
+          - market
+          - market_3
+          - location
+
+      - name: "Language"
+        includes:
+          - locale
+          - language
+          - is_language_localised
+          - localisation_language
+
+      - name: "OS Version"
+        includes:
+          - os_version
+          - major_os_version
+          - minor_os_version
+
+      - name: "In Session Event Counts"
+        includes:
+          - count_view_subscription_plans
+          - count_change_mode
+          - count_open_cycle_view
+          - count_open_calendar
+          - count_open_data_entry
+          - count_exit_data_entry
+          - count_track_period
+          - count_open_analysis
+          - count_open_content_tab
+
+      - name: "In Session Event Booleans"
+        includes:
+          - did_start_subscription
+          - did_view_subscription_plan
+          - did_change_mode
+          - did_open_cycle_view
+          - did_open_calendar
+          - did_open_data_entry
+          - did_exit_data_entry
+          - did_track_period
+          - did_open_analysis
+          - did_open_content_tab
+
+      - name: "Sessions with x event"
+        includes:
+          - started_subscription_sessions
+          - view_subscription_plan_sessions
+          - change_mode_sessions
+          - open_cycle_view_sessions
+          - open_calendar_sessions
+          - open_data_entry_sessions
+          - exit_data_entry_sessions
+          - track_period_sessions
+          - open_analysis_sessions
+          - open_content_tab_sessions
+
+      - name: "Users with x event"
+        includes:
+          - started_subscription_users
+          - view_subscription_plan_users
+          - change_mode_users
+          - open_cycle_view_users
+          - open_calendar_users
+          - open_data_entry_users
+          - exit_data_entry_users
+          - track_period_users
+          - open_analysis_users
+          - open_content_tab_users
