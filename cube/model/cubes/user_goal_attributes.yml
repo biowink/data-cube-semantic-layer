@@ -1,0 +1,95 @@
+cubes:
+  - name: user_goal_attributes
+    sql_table: user_metrics.user_goal_attributes
+
+    dimensions:
+      - name: analytics_id
+        sql: "{CUBE}.analytics_id"
+        type: string
+        primary_key: true
+        public: false
+
+      - name: count_goals_selected
+        sql: "{CUBE}.count_goals_selected"
+        type: number
+
+      - name: goal_predict_period
+        title: "Predict Period"
+        sql: "{CUBE}.goal_predict_period"
+        type: boolean
+
+      - name: goal_understand_body
+        title: "Understand My Body"
+        sql: "{CUBE}.goal_understand_body"
+        type: boolean
+
+      - name: goal_track_symptoms
+        title: "Track Symptoms"
+        sql: "{CUBE}.goal_track_symptoms"
+        type: boolean
+
+      - name: goal_gather_symptoms
+        title: "Gather Symptoms"
+        sql: "{CUBE}.goal_gather_symptoms"
+        type: boolean
+
+      - name: goal_conceive
+        title: "Conceive"
+        sql: "{CUBE}.goal_conceive"
+        type: boolean
+
+      - name: goal_pregnancy
+        title: "Pregnancy"
+        sql: "{CUBE}.goal_pregnancy"
+        type: boolean
+
+      - name: goal_perimenopause
+        title: "Perimenopause"
+        sql: "{CUBE}.goal_perimenopause"
+        type: boolean
+
+      - name: goal_none_of_the_above
+        title: "None Of The Above"
+        sql: "{CUBE}.goal_none_of_the_above"
+        type: boolean
+
+      - name: assigned_mode
+        sql: "{CUBE}.assigned_mode"
+        type: string
+
+      - name: period_frequency
+        sql: "{CUBE}.period_frequency"
+        type: string
+
+      - name: count_tracking_categories_selected
+        sql: "{CUBE}.count_tracking_categories_selected"
+        type: number
+
+      - name: track_period
+        sql: "{CUBE}.track_period"
+        type: boolean
+
+      - name: track_pain
+        sql: "{CUBE}.track_pain"
+        type: boolean
+
+      - name: track_skin
+        sql: "{CUBE}.track_skin"
+        type: boolean
+
+      - name: track_sex_life
+        sql: "{CUBE}.track_sex_life"
+        type: boolean
+
+      - name: track_feelings
+        sql: "{CUBE}.track_feelings"
+        type: boolean
+
+      - name: track_energy
+        sql: "{CUBE}.track_energy"
+        type: boolean
+
+      - name: track_pms
+        title: "Track PMS"
+        sql: "{CUBE}.track_pms"
+        type: boolean
