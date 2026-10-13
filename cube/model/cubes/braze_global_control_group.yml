@@ -3,11 +3,6 @@ cubes:
     sql_table: der.braze_global_control_group_users
     public: false
 
-    joins:
-      - name: users
-        relationship: one_to_one
-        sql: "{CUBE.analytics_id} = {users.analytics_id}"
-
     dimensions:
       - name: analytics_id
         sql: "{CUBE}.analytics_id"

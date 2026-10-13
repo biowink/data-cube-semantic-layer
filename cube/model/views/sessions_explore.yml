@@ -1,5 +1,5 @@
 views:
-  - name: sessions_view
+  - name: sessions_explore
     description: "Sessions from the Clue app"
 
     cubes:
@@ -14,7 +14,7 @@ views:
         includes: "*"
         prefix: true
 
-      - join_path: sessions.user_profiles
+      - join_path: sessions.users.user_profiles
         includes: "*"
         prefix: true
 
@@ -27,7 +27,7 @@ views:
 #        includes: "*"
 #        prefix: true
 
-      - join_path: sessions.adjust_attribution
+      - join_path: sessions.users.adjust_attribution
         includes: "*"
         prefix: true
 
@@ -39,7 +39,7 @@ views:
 #        includes: "*"
 #        prefix: true
 
-      - join_path: sessions.users.user_last_properties.market_mapping
+      - join_path: sessions.market_mapping
         includes: "*"
         prefix: true
 

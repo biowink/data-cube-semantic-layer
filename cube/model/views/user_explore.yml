@@ -70,6 +70,18 @@
         excludes:
           - model_identifier
 
+      - join_path: users.user_goal_attributes
+        includes: "*"
+        prefix: true
+        excludes:
+          - analytics_id
+
+      - join_path: users.braze_global_control_group
+        includes: "*"
+        prefix: true
+        excludes:
+          - analytics_id
+
     # No folders: the explore's view_labels aren't ported because folders only show in
     # Cube-native tools. Metabase reads this view over the SQL API as one flat table, so
     # fields are grouped by their join prefix (e.g. new_user_retention_*) instead.

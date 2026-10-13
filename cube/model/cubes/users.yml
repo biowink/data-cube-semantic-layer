@@ -34,6 +34,14 @@ cubes:
         relationship: one_to_one
         sql: "{CUBE}.analytics_id = {adjust_attribution.analytics_id}"
 
+      - name: user_goal_attributes
+        relationship: one_to_one
+        sql: "{CUBE}.analytics_id = {user_goal_attributes.analytics_id}"
+
+      - name: braze_global_control_group
+        relationship: one_to_one
+        sql: "{CUBE}.analytics_id = {braze_global_control_group.analytics_id}"
+
     dimensions:
       - name: analytics_id
         sql: analytics_id
