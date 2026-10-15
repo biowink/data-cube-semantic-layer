@@ -11,6 +11,21 @@ cubes:
         member_level:
           includes: "*"
 
+    # Pay is converted to EUR at the rate on the attrition month's reference date.
+    # Rates load a day behind, so the in-progress month (reference date = today) uses
+    # the last rate of the previous month instead. Only reachable through
+    # people_attrition (which supplies the dates); EUR has no row in the rates table,
+    # so it falls back to 1.
+    joins:
+      - name: people_fx_rates
+        relationship: many_to_one
+        sql: >
+          {CUBE}.rate_currency = {people_fx_rates}.currency
+          AND {people_fx_rates}.date = CASE WHEN {people_attrition}.is_partial_month
+                                            THEN DATE_ADD('day', -1, {people_attrition}.month_start)
+                                            ELSE {people_attrition}.reference_date
+                                       END
+
     dimensions:
       - name: pk
         sql: "CONCAT({CUBE}.employee_id, '|', CAST({CUBE}.valid_from AS VARCHAR))"
@@ -26,16 +41,24 @@ cubes:
         sql: paid_per
         type: string
 
+      - name: rate_currency
+        sql: rate_currency
+        type: string
+
       # Only monthly salaries are comparable - hourly, per-piece, commission and
       # contract rates (mostly freelancers) aren't, so they get no annual salary.
-      # rate_currency is empty in the source; amounts are assumed to be EUR.
       - name: annual_salary
-        sql: "CASE WHEN {CUBE}.pay_type = 'Salary' AND {CUBE}.paid_per = 'Month' THEN {CUBE}.rate_value * 12 END"
+        description: "Annual salary in EUR (monthly salary x 12, converted at the rate on the month's reference date, or the previous month-end for the current month)"
+        sql: >
+          CASE WHEN {CUBE}.pay_type = 'Salary' AND {CUBE}.paid_per = 'Month'
+               THEN {CUBE}.rate_value * 12
+                    / CASE WHEN {CUBE}.rate_currency = 'EUR' THEN 1 ELSE {people_fx_rates.rate} END
+          END
         type: number
         public: false
 
       - name: salary_band
-        description: "Annual salary band (monthly salary x 12, as paid - part-time salaries are not converted to full-time equivalent). Hourly, freelance and other non-salaried pay is 'Not salaried'."
+        description: "Annual salary band in EUR (monthly salary x 12, converted at the rate on the month's reference date, or the previous month-end for the current month - part-time salaries are not converted to full-time equivalent). Hourly, freelance and other non-salaried pay is 'Not salaried'."
         sql: >
           CASE WHEN {annual_salary} IS NULL THEN '6. Not salaried'
                WHEN {annual_salary} < 40000 THEN '1. < 40k'
@@ -48,11 +71,11 @@ cubes:
 
     measures:
       - name: avg_annual_salary
-        description: "Average annual salary of salaried employees (monthly x 12). Non-salaried pay is left out."
+        description: "Average annual salary in EUR of salaried employees (monthly x 12). Non-salaried pay is left out."
         sql: "{annual_salary}"
         type: avg
 
       - name: median_annual_salary
-        description: "Median annual salary of salaried employees (monthly x 12, approximate). Non-salaried pay is left out."
+        description: "Median annual salary in EUR of salaried employees (monthly x 12, approximate). Non-salaried pay is left out."
         sql: "approx_percentile({annual_salary}, 0.5)"
         type: number

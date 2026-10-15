@@ -1,0 +1,22 @@
+cubes:
+  - name: people_fx_rates
+    sql_table: rep.currency_exchange_rates
+    public: false
+    description: "Daily EUR exchange rates (units of currency per 1 EUR), used to convert people_employee_compensation pay to EUR."
+
+    access_policy:
+      - group: people
+        member_level:
+          includes: "*"
+
+    dimensions:
+      - name: pk
+        sql: prim_key
+        type: string
+        primary_key: true
+        public: false
+
+      - name: rate
+        sql: rate
+        type: number
+        public: false
