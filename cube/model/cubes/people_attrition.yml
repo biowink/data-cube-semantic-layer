@@ -80,19 +80,19 @@ cubes:
 
       # Org
       - name: department
-        sql: department
+        sql: "COALESCE({CUBE}.department, 'Unknown')"
         type: string
         meta:
           group_label: "Org"
 
       - name: division
-        sql: division
+        sql: "COALESCE({CUBE}.division, 'Unknown')"
         type: string
         meta:
           group_label: "Org"
 
       - name: location
-        sql: location
+        sql: "COALESCE({CUBE}.location, 'Unknown')"
         type: string
         meta:
           group_label: "Org"
@@ -105,14 +105,14 @@ cubes:
           group_label: "Org"
 
       - name: job_title
-        sql: job_title
+        sql: "COALESCE({CUBE}.job_title, 'Unknown')"
         type: string
         meta:
           group_label: "Org"
 
       - name: employment_status
         description: "BambooHR employment status as of the month's reference date (e.g. Full-Time, Freelance)"
-        sql: employment_status
+        sql: "COALESCE({CUBE}.employment_status, 'Unknown')"
         type: string
         meta:
           group_label: "Org"
