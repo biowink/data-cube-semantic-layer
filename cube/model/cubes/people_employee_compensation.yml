@@ -60,12 +60,12 @@ cubes:
       - name: salary_band
         description: "Annual salary band in EUR (monthly salary x 12, converted at the rate on the month's reference date, or the previous month-end for the current month - part-time salaries are not converted to full-time equivalent). Hourly, freelance and other non-salaried pay is 'Not salaried'."
         sql: >
-          CASE WHEN {annual_salary} IS NULL THEN '6. Not salaried'
-               WHEN {annual_salary} < 40000 THEN '1. < 40k'
-               WHEN {annual_salary} < 60000 THEN '2. 40-60k'
-               WHEN {annual_salary} < 80000 THEN '3. 60-80k'
-               WHEN {annual_salary} < 100000 THEN '4. 80-100k'
-               ELSE '5. 100k+'
+          CASE WHEN {annual_salary} IS NULL THEN 'Not salaried'
+               WHEN {annual_salary} < 40000 THEN '< 60k'
+               WHEN {annual_salary} < 60000 THEN '60-100k'
+               WHEN {annual_salary} < 80000 THEN '100-150k'
+               WHEN {annual_salary} < 100000 THEN '150-200k'
+               ELSE '200k+'
           END
         type: string
 
