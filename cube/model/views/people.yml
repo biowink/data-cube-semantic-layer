@@ -1,0 +1,150 @@
+views:
+  - name: attrition
+    description: >
+      Monthly employee headcount, hires and exits (BambooHR), one row per employee
+      per month. HR data - restricted to the people group.
+
+    # Keeps the name and columns Metabase dashboards were built on when this was the
+    # attrition cube (now people_attrition), so they keep working.
+
+    # Views are the security boundary: when queried through this view, this
+    # access_policy applies, not the ones on the underlying cubes.
+    access_policy:
+      - group: people
+        member_level:
+          includes: "*"
+
+    # Cube's field marked public:false alone isn't enough to keep a field out of BI tools
+    # connected via the SQL API. It also has to be excluded from the view.
+    cubes:
+      - join_path: people_attrition
+        includes: "*"
+        excludes:
+          - pk
+          - employee_id
+          - person_months
+          - months
+          - exits_12m
+          - person_months_12m
+          - months_12m
+
+  - name: people_absence
+    description: >
+      Time off as a share of expected working days (BambooHR), by month, with org
+      breakdowns from attrition. Includes vacation. History starts 2026-07-08 -
+      July 2026 is a partial month. HR data - restricted to the people group.
+
+    # Views are the security boundary: when queried through this view, this
+    # access_policy applies, not the ones on the underlying cubes.
+    access_policy:
+      - group: people
+        member_level:
+          includes: "*"
+
+    cubes:
+      - join_path: people_absence_base
+        includes:
+          - month_start
+          - is_partial_month
+          - expected_days
+          - absence_days
+          - absence_rate
+          - absence_days_per_employee
+          - employees_with_absence
+          - share_with_absence
+
+      # Org breakdowns - add more attrition dimensions here as needed
+      - join_path: people_absence_base.people_attrition
+        includes:
+          - department
+          - division
+          - location_group
+          - tenure_band
+          - employment_status
+
+  - name: people_age
+    description: >
+      Headcount by age band (BambooHR). Filter is_active_at_end = true and pick a
+      month - demographics are only available from 2026-10-08, when snapshots started.
+      Gender and age are in separate views on purpose, so they can't be combined.
+
+    # Views are the security boundary: when queried through this view, this
+    # access_policy applies, not the ones on the underlying cubes.
+    access_policy:
+      - group: people
+        member_level:
+          includes: "*"
+
+    cubes:
+      - join_path: people_attrition
+        includes:
+          - month_start
+          - is_partial_month
+          - is_active_at_end
+          - employment_status
+          - headcount_end
+
+      - join_path: people_attrition.people_employee_snapshot
+        includes:
+          - age_band
+
+  - name: people_gender
+    description: >
+      Headcount by gender (BambooHR). Filter is_active_at_end = true and pick a
+      month - demographics are only available from 2026-10-08, when snapshots started.
+      Gender and age are in separate views on purpose, so they can't be combined.
+
+    # Views are the security boundary: when queried through this view, this
+    # access_policy applies, not the ones on the underlying cubes.
+    access_policy:
+      - group: people
+        member_level:
+          includes: "*"
+
+    cubes:
+      - join_path: people_attrition
+        includes:
+          - month_start
+          - is_partial_month
+          - is_active_at_end
+          - employment_status
+          - headcount_end
+
+      - join_path: people_attrition.people_employee_snapshot
+        includes:
+          - gender
+
+  - name: people_compensation
+    description: >
+      Headcount and salary by annual salary band (BambooHR), with org breakdowns from
+      attrition. For the current workforce, filter is_partial_month = true (the current
+      month) and is_active_at_end = true. No employee-level fields - only bands and
+      aggregates. HR pay data - restricted to the people group.
+
+    # Views are the security boundary: when queried through this view, this
+    # access_policy applies, not the ones on the underlying cubes.
+    access_policy:
+      - group: people
+        member_level:
+          includes: "*"
+
+    cubes:
+      - join_path: people_attrition
+        includes:
+          - month_start
+          - is_partial_month
+          - is_active_at_end
+          - department
+          - division
+          - location
+          - location_group
+          - employment_status
+          - headcount_end
+
+      - join_path: people_attrition.people_employee_compensation
+        includes:
+          - salary_band
+          - pay_type
+          - paid_per
+          - avg_annual_salary
+          - median_annual_salary
