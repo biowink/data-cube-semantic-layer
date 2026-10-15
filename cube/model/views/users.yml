@@ -1,5 +1,5 @@
   views:
-  - name: user_explore
+  - name: users
     description: >
       Migrated from users.lkml (explore: users) - mainly for new users charts.
       Joins user_last_properties, user_profiles, user_last_optional_consent_status,
@@ -10,23 +10,23 @@
     # Cube's field marked public:false alone isn't enough to keep a field out of BI tools
     # connected via the SQL API. It also has to be excluded from the view.
     cubes:
-      - join_path: users
+      - join_path: users_base
         includes: "*"
         prefix: true
 
-      - join_path: users.user_last_properties
-        includes: "*"
-        prefix: true
-        excludes:
-          - analytics_id
-
-      - join_path: users.user_profiles
+      - join_path: users_base.user_last_properties
         includes: "*"
         prefix: true
         excludes:
           - analytics_id
 
-      - join_path: users.user_last_optional_consent_status
+      - join_path: users_base.user_profiles
+        includes: "*"
+        prefix: true
+        excludes:
+          - analytics_id
+
+      - join_path: users_base.user_last_optional_consent_status
         includes: "*"
         prefix: true
         excludes:
@@ -41,42 +41,42 @@
           - etl_created_at
           - etl_updated_at
 
-      - join_path: users.new_user_activation
+      - join_path: users_base.new_user_activation
         includes: "*"
         prefix: true
         excludes:
           - analytics_id
           - days_since_account_created
 
-      - join_path: users.new_user_retention
+      - join_path: users_base.new_user_retention
         includes: "*"
         prefix: true
         excludes:
           - analytics_id
 
-      - join_path: users.adjust_attribution
+      - join_path: users_base.adjust_attribution
         includes: "*"
         prefix: true
         excludes:
           - analytics_id
 
-      - join_path: users.user_last_properties.market_mapping
+      - join_path: users_base.user_last_properties.market_mapping
         includes: "*"
         prefix: true
 
-      - join_path: users.user_last_properties.apple_device_mapping
+      - join_path: users_base.user_last_properties.apple_device_mapping
         includes: "*"
         prefix: true
         excludes:
           - model_identifier
 
-      - join_path: users.user_goal_attributes
+      - join_path: users_base.user_goal_attributes
         includes: "*"
         prefix: true
         excludes:
           - analytics_id
 
-      - join_path: users.braze_global_control_group
+      - join_path: users_base.braze_global_control_group
         includes: "*"
         prefix: true
         excludes:

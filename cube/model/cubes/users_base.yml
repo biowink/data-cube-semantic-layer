@@ -1,5 +1,5 @@
 cubes:
-  - name: users
+  - name: users_base
     sql_table: core.clue_users
     description: "Migrated from views/users/users.view.lkml"
     public: false

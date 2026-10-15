@@ -1,5 +1,5 @@
 cubes:
-  - name: sessions
+  - name: sessions_base
     sql_table: der.sessions
     public: false
 
