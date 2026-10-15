@@ -4,9 +4,9 @@ cubes:
     public: false
 
     joins:
-      - name: users
+      - name: users_base
         relationship: many_to_one
-        sql: "{CUBE.analytics_id} = {users.analytics_id}"
+        sql: "{CUBE.analytics_id} = {users_base.analytics_id}"
 
       - name: market_mapping
         relationship: many_to_one
@@ -205,11 +205,11 @@ cubes:
 
       # --- since_account_created (Looker type: duration -> trimmed to hours/days only) ---
       - name: hours_since_account_created
-        sql: "DATE_DIFF('hour', {users.account_created_date}, {start_date})"
+        sql: "DATE_DIFF('hour', {users_base.account_created_date}, {start_date})"
         type: number
 
       - name: days_since_account_created
-        sql: "DATE_DIFF('day', {users.account_created_date}, {start_date})"
+        sql: "DATE_DIFF('day', {users_base.account_created_date}, {start_date})"
         type: number
 
       - name: user_age

@@ -16,7 +16,7 @@ cubes:
 
       - name: entered_global_braze_test
         sql: |-
-          CASE WHEN {users.account_created_at} < TIMESTAMP '2024-09-30' THEN TIMESTAMP '2024-09-30' ELSE {users.account_created_at} END
+          CASE WHEN {users_base.account_created_at} < TIMESTAMP '2024-09-30' THEN TIMESTAMP '2024-09-30' ELSE {users_base.account_created_at} END
         type: time
 
       - name: in_global_braze_test

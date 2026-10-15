@@ -7,7 +7,7 @@ cubes:
     joins:
       - name: users
         relationship: many_to_one
-        sql: "{CUBE}.analytics_id = {users.analytics_id}"
+        sql: "{CUBE}.analytics_id = {users_base.analytics_id}"
 
       - name: paddle_discount_codes
         relationship: many_to_one
@@ -345,19 +345,19 @@ cubes:
       # --- duration dimension_groups -> DATE_DIFF per interval (Athena/Trino: DATE_DIFF('unit', start, end)) ---
 
       - name: days_since_account_created
-        sql: "DATE_DIFF('day', {users.account_created_date}, {CUBE.backend_created_date})"
+        sql: "DATE_DIFF('day', {users_base.account_created_date}, {CUBE.backend_created_date})"
         type: number
       - name: weeks_since_account_created
-        sql: "DATE_DIFF('week', {users.account_created_date}, {CUBE.backend_created_date})"
+        sql: "DATE_DIFF('week', {users_base.account_created_date}, {CUBE.backend_created_date})"
         type: number
       - name: months_since_account_created
-        sql: "DATE_DIFF('month', {users.account_created_date}, {CUBE.backend_created_date})"
+        sql: "DATE_DIFF('month', {users_base.account_created_date}, {CUBE.backend_created_date})"
         type: number
       - name: quarters_since_account_created
-        sql: "DATE_DIFF('quarter', {users.account_created_date}, {CUBE.backend_created_date})"
+        sql: "DATE_DIFF('quarter', {users_base.account_created_date}, {CUBE.backend_created_date})"
         type: number
       - name: years_since_account_created
-        sql: "DATE_DIFF('year', {users.account_created_date}, {CUBE.backend_created_date})"
+        sql: "DATE_DIFF('year', {users_base.account_created_date}, {CUBE.backend_created_date})"
         type: number
 
       - name: days_start_to_created_at
@@ -377,19 +377,19 @@ cubes:
         type: number
 
       - name: days_account_created_to_start
-        sql: "DATE_DIFF('day', {users.account_created_date}, {CUBE.started_date})"
+        sql: "DATE_DIFF('day', {users_base.account_created_date}, {CUBE.started_date})"
         type: number
       - name: weeks_account_created_to_start
-        sql: "DATE_DIFF('week', {users.account_created_date}, {CUBE.started_date})"
+        sql: "DATE_DIFF('week', {users_base.account_created_date}, {CUBE.started_date})"
         type: number
       - name: months_account_created_to_start
-        sql: "DATE_DIFF('month', {users.account_created_date}, {CUBE.started_date})"
+        sql: "DATE_DIFF('month', {users_base.account_created_date}, {CUBE.started_date})"
         type: number
       - name: quarters_account_created_to_start
-        sql: "DATE_DIFF('quarter', {users.account_created_date}, {CUBE.started_date})"
+        sql: "DATE_DIFF('quarter', {users_base.account_created_date}, {CUBE.started_date})"
         type: number
       - name: years_account_created_to_start
-        sql: "DATE_DIFF('year', {users.account_created_date}, {CUBE.started_date})"
+        sql: "DATE_DIFF('year', {users_base.account_created_date}, {CUBE.started_date})"
         type: number
 
       - name: days_start_to_expiration
