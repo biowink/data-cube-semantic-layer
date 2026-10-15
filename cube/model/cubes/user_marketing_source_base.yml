@@ -1,0 +1,82 @@
+cubes:
+  - name: user_marketing_source_base
+    sql_table: user_metrics.user_marketing_source_selections
+    description: "Migrated from views/users/user_marketing_source.view.lkml"
+    public: false
+
+    # One row per selected marketing source, so these user-level joins are many_to_one
+    joins:
+      - name: user_first_properties
+        relationship: many_to_one
+        sql: "{CUBE}.analytics_id = {user_first_properties.analytics_id}"
+
+      - name: user_last_properties
+        relationship: many_to_one
+        sql: "{CUBE}.analytics_id = {user_last_properties.analytics_id}"
+
+      - name: user_profiles
+        relationship: many_to_one
+        sql: "{CUBE}.analytics_id = {user_profiles.analytics_id}"
+
+      - name: adjust_attribution
+        relationship: many_to_one
+        sql: "{CUBE}.analytics_id = {adjust_attribution.analytics_id}"
+
+      - name: user_subscription_status
+        relationship: many_to_one
+        sql: "{CUBE}.analytics_id = {user_subscription_status.analytics_id}"
+
+      - name: new_user_retention
+        relationship: many_to_one
+        sql: "{CUBE}.analytics_id = {new_user_retention.analytics_id}"
+
+    dimensions:
+      # LookML declared analytics_id as primary key, but the ETL unnests one row per
+      # selected source; this key is synthesised from the row grain (checked unique)
+      - name: selection_id
+        sql: >
+          {CUBE}.analytics_id
+            || '-' || COALESCE({CUBE}.marketing_source_type, 'none')
+            || '-' || COALESCE({CUBE}.marketing_source_text, 'none')
+        type: string
+        primary_key: true
+        public: false
+
+      - name: analytics_id
+        sql: analytics_id
+        type: string
+        public: false
+
+      - name: list_version
+        sql: list_version
+        type: string
+
+      - name: count_marketing_sources
+        sql: count_marketing_sources
+        type: number
+
+      # dimension_group: user_reply (raw/date/week/month/quarter/year) - all derivable at query time
+      - name: user_reply_at
+        sql: user_selection_ts
+        type: time
+
+      # CASE wrapper: Cube filters append `= CAST(? AS BOOLEAN)`
+      - name: has_free_text
+        sql: "CASE WHEN {CUBE}.marketing_source_text IS NOT NULL THEN TRUE ELSE FALSE END"
+        type: boolean
+
+      - name: marketing_source_type
+        sql: marketing_source_type
+        type: string
+
+      - name: marketing_source_text
+        sql: marketing_source_text
+        type: string
+
+    measures:
+      - name: user_count
+        sql: analytics_id
+        type: count_distinct
+
+      - name: selection_count
+        type: count

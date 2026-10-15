@@ -1,0 +1,88 @@
+cubes:
+  - name: user_subscription_status
+    sql_table: user_metrics.user_subscription_status
+    description: "Migrated from views/users/user_subscription_status.view.lkml"
+    public: false
+    # suggestions: no dropped - Metabase builds its own filter value lists
+
+    dimensions:
+      - name: analytics_id
+        sql: analytics_id
+        type: string
+        primary_key: true
+        public: false
+
+      # Conversion
+      # dimension_group: conversion (raw/date/week/month/quarter/year) - all derivable at query time
+      - name: conversion_at
+        sql: conversion_ts
+        type: time
+
+      # CASE wrapper keeps LookML's COALESCE(..., FALSE): NULL counts as No
+      - name: has_converted
+        sql: "CASE WHEN {CUBE}.has_converted THEN TRUE ELSE FALSE END"
+        type: boolean
+        description: "Whether a user has ever purchased a mobile or web subscription"
+
+      - name: conversion_subscription_source
+        sql: conversion_subscription_source
+        type: string
+
+      # Current Subscription Status
+      - name: is_clue_plus
+        sql: "CASE WHEN {CUBE}.is_clue_plus THEN TRUE ELSE FALSE END"
+        type: boolean
+        description: "Whether a user currently has Clue Plus access"
+
+      - name: is_paid_subscribed
+        sql: "CASE WHEN {CUBE}.is_paid_subscribed THEN TRUE ELSE FALSE END"
+        type: boolean
+        description: "Whether a user currently has Clue Plus access from a purchased valid mobile or web subscription"
+
+      - name: product_tier
+        sql: "CASE WHEN {CUBE}.is_clue_plus THEN 'clue plus' ELSE 'free' END"
+        type: string
+        public: false
+
+      - name: current_product_id
+        sql: "CASE WHEN {CUBE}.is_clue_plus THEN {CUBE}.last_product_id END"
+        type: string
+
+      - name: current_subscription_source
+        sql: "CASE WHEN {CUBE}.is_clue_plus THEN {CUBE}.last_subscription_source END"
+        type: string
+
+      - name: current_subscription_duration
+        sql: "CASE WHEN {CUBE}.is_clue_plus THEN {CUBE}.last_subscription_duration END"
+        type: number
+
+      # dimension_groups: current_subscription_started/canceled/expires
+      # (raw/date/week/month/quarter/year) - all derivable at query time
+      - name: current_subscription_started_at
+        sql: "CASE WHEN {CUBE}.is_clue_plus THEN {CUBE}.last_subscription_started_ts END"
+        type: time
+
+      - name: current_subscription_canceled_at
+        sql: "CASE WHEN {CUBE}.is_clue_plus THEN {CUBE}.last_subscription_canceled_ts END"
+        type: time
+
+      - name: current_subscription_expires_at
+        sql: "CASE WHEN {CUBE}.is_clue_plus THEN {CUBE}.last_subscription_expired_ts END"
+        type: time
+
+    measures:
+      - name: total_gross_sales_euro
+        sql: "COALESCE({CUBE}.lifetime_gross_sales_euro, 0)"
+        type: sum
+        format: currency
+
+      - name: total_net_sales_euro
+        sql: "COALESCE({CUBE}.lifetime_net_sales_euro, 0)"
+        type: sum
+        format: currency
+
+      - name: empirical_ltv_euro
+        sql: "COALESCE({CUBE}.lifetime_net_sales_euro, 0)"
+        type: avg
+        title: "Empirical LTV"
+        format: currency

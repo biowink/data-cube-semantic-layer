@@ -1,0 +1,50 @@
+cubes:
+  - name: user_first_properties
+    sql_table: user_metrics.user_first_session_attributes
+    description: "Migrated from views/users/user_first_properties.view.lkml"
+    public: false
+
+    dimensions:
+      - name: analytics_id
+        sql: analytics_id
+        type: string
+        primary_key: true
+        public: false
+
+      # dimension_group: first_session -> base time dim + the timeframes Cube
+      # can't derive at query time (day_of_year/day_of_week)
+      - name: first_session_at
+        sql: session_ts
+        type: time
+
+      - name: first_session_day_of_year
+        sql: "day_of_year({CUBE}.session_ts)"
+        type: number
+
+      - name: first_session_day_of_week
+        sql: "date_format({CUBE}.session_ts, '%W')"
+        type: string
+
+      - name: platform
+        sql: platform
+        type: string
+
+      - name: language
+        sql: language
+        type: string
+
+      - name: app_version
+        sql: app_version
+        type: string
+
+      - name: major_app_version
+        sql: major_app_version
+        type: number
+
+      - name: minor_app_version
+        sql: minor_app_version
+        type: number
+
+      - name: device_model
+        sql: device_model
+        type: string

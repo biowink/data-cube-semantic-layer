@@ -1,0 +1,28 @@
+cubes:
+  - name: user_last_device_properties
+    sql_table: user_metrics.user_last_device_attributes
+    description: "Migrated from views/users/user_last_device_properties.view.lkml"
+    public: false
+
+    dimensions:
+      - name: analytics_id
+        sql: analytics_id
+        type: string
+        primary_key: true
+        public: false
+
+      - name: ui_scheme
+        sql: ui_scheme
+        type: string
+
+      - name: measurement_system
+        sql: measurement_system
+        type: string
+
+      - name: temperature_unit
+        sql: temperature_unit
+        type: string
+
+      - name: has_widget
+        sql: has_widget
+        type: boolean
