@@ -13,7 +13,7 @@ cubes:
 
       # dimension_group: first_session -> base time dim + the timeframes Cube
       # can't derive at query time (day_of_year/day_of_week)
-      - name: first_session_at
+      - name: first_session
         sql: "{CUBE}.session_ts"
         type: time
 

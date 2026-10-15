@@ -44,7 +44,7 @@ views:
       # LookML exposed conversion_date; Cube picks the day granularity per query
       - join_path: user_marketing_source_base.user_subscription_status
         includes:
-          - conversion_at
+          - conversion
         prefix: true
 
       # m2_tracking_retention not included: the LookML reads count_m2_tracking_points,

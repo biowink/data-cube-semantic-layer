@@ -56,13 +56,12 @@ cubes:
         type: number
 
       # dimension_group: user_reply (raw/date/week/month/quarter/year) - all derivable at query time
-      - name: user_reply_at
+      - name: user_reply
         sql: "{CUBE}.user_selection_ts"
         type: time
 
-      # CASE wrapper: Cube filters append `= CAST(? AS BOOLEAN)`
       - name: has_free_text
-        sql: "CASE WHEN {CUBE}.marketing_source_text IS NOT NULL THEN TRUE ELSE FALSE END"
+        sql: "{CUBE}.marketing_source_text IS NOT NULL"
         type: boolean
 
       - name: marketing_source_type
