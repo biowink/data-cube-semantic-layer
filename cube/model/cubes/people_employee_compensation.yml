@@ -1,0 +1,58 @@
+cubes:
+  - name: people_employee_compensation
+    sql_table: people.employee_compensation_history
+    public: false
+    description: "BambooHR compensation history, one row per employee per pay change. Joined from attrition on the month's reference date; only exposed through the people_compensation view."
+
+    # Employee-level pay data: only SQL API users in the "people" group
+    # (see cube.js) can see or query this cube.
+    access_policy:
+      - group: people
+        member_level:
+          includes: "*"
+
+    dimensions:
+      - name: pk
+        sql: "CONCAT({CUBE}.employee_id, '|', CAST({CUBE}.valid_from AS VARCHAR))"
+        type: string
+        primary_key: true
+        public: false
+
+      - name: pay_type
+        sql: pay_type
+        type: string
+
+      - name: paid_per
+        sql: paid_per
+        type: string
+
+      # Only monthly salaries are comparable - hourly, per-piece, commission and
+      # contract rates (mostly freelancers) aren't, so they get no annual salary.
+      # rate_currency is empty in the source; amounts are assumed to be EUR.
+      - name: annual_salary
+        sql: "CASE WHEN {CUBE}.pay_type = 'Salary' AND {CUBE}.paid_per = 'Month' THEN {CUBE}.rate_value * 12 END"
+        type: number
+        public: false
+
+      - name: salary_band
+        description: "Annual salary band (monthly salary x 12, as paid - part-time salaries are not converted to full-time equivalent). Hourly, freelance and other non-salaried pay is 'Not salaried'."
+        sql: >
+          CASE WHEN {annual_salary} IS NULL THEN '6. Not salaried'
+               WHEN {annual_salary} < 40000 THEN '1. < 40k'
+               WHEN {annual_salary} < 60000 THEN '2. 40-60k'
+               WHEN {annual_salary} < 80000 THEN '3. 60-80k'
+               WHEN {annual_salary} < 100000 THEN '4. 80-100k'
+               ELSE '5. 100k+'
+          END
+        type: string
+
+    measures:
+      - name: avg_annual_salary
+        description: "Average annual salary of salaried employees (monthly x 12). Non-salaried pay is left out."
+        sql: "{annual_salary}"
+        type: avg
+
+      - name: median_annual_salary
+        description: "Median annual salary of salaried employees (monthly x 12, approximate). Non-salaried pay is left out."
+        sql: "approx_percentile({annual_salary}, 0.5)"
+        type: number
