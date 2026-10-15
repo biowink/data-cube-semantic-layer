@@ -1,8 +1,8 @@
 views:
-  - name: adjust
+  - name: adjust_campaign_performance
 
     cubes:
-      - join_path: adjust_campaign_performance
+      - join_path: adjust_campaign_performance_base
         includes: "*"
         excludes:
           - ad_spend_d7

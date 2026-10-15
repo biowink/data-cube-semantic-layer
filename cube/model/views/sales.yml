@@ -16,7 +16,7 @@ views:
 #          - tax
 #          - store_fee_rate
 
-      - join_path: subscriptions_events.users
+      - join_path: subscriptions_events.users_base
         includes: "*"
         prefix: true
 

@@ -1,7 +1,8 @@
 cubes:
-  - name: attrition
+  - name: people_attrition
     sql_table: people.attrition
-    description: "Monthly employee headcount, hires and exits (BambooHR), one row per employee per month. HR data - restricted to the people group."
+    public: false
+    description: "Monthly employee headcount, hires and exits (BambooHR), one row per employee per month. HR data - restricted to the people group. Exposed through the attrition view."
 
     # NOTE: despite their names, people.attrition's termination_*_id columns hold
     # labels (e.g. "Resignation (Voluntary)"), not BambooHR ids, so they're exposed
@@ -11,11 +12,20 @@ cubes:
     # Demographics come from the BambooHR snapshot taken on the month's reference
     # date. Snapshots only exist from 2026-10-08, so earlier months have no match.
     joins:
-      - name: employee_snapshot
+      - name: people_employee_snapshot
         relationship: one_to_one
         sql: >
-          {CUBE}.employee_id = {employee_snapshot}.employee_id
-          AND {CUBE}.reference_date = {employee_snapshot}.snapshot_date
+          {CUBE}.employee_id = {people_employee_snapshot}.employee_id
+          AND {CUBE}.reference_date = {people_employee_snapshot}.snapshot_date
+
+      # The compensation row in effect on the month's reference date
+      # (valid_to is exclusive; an open row has valid_to NULL).
+      - name: people_employee_compensation
+        relationship: one_to_one
+        sql: >
+          {CUBE}.employee_id = {people_employee_compensation}.employee_id
+          AND {people_employee_compensation}.valid_from <= {CUBE}.reference_date
+          AND COALESCE({people_employee_compensation}.valid_to, DATE '9999-12-31') > {CUBE}.reference_date
 
     # Employee-level HR data: only SQL API users in the "people" group
     # (see cube.js) can see or query this cube.
@@ -70,19 +80,19 @@ cubes:
 
       # Org
       - name: department
-        sql: department
+        sql: "COALESCE({CUBE}.department, 'Unknown')"
         type: string
         meta:
           group_label: "Org"
 
       - name: division
-        sql: division
+        sql: "COALESCE({CUBE}.division, 'Unknown')"
         type: string
         meta:
           group_label: "Org"
 
       - name: location
-        sql: location
+        sql: "COALESCE({CUBE}.location, 'Unknown')"
         type: string
         meta:
           group_label: "Org"
@@ -95,14 +105,14 @@ cubes:
           group_label: "Org"
 
       - name: job_title
-        sql: job_title
+        sql: "COALESCE({CUBE}.job_title, 'Unknown')"
         type: string
         meta:
           group_label: "Org"
 
       - name: employment_status
         description: "BambooHR employment status as of the month's reference date (e.g. Full-Time, Freelance)"
-        sql: employment_status
+        sql: "COALESCE({CUBE}.employment_status, 'Unknown')"
         type: string
         meta:
           group_label: "Org"

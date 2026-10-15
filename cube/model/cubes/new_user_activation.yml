@@ -4,15 +4,15 @@ cubes:
     description: "Migrated from views/users/new_user_activation.view.lkml"
 
     # The D7/D30 fields are NULLed out for accounts younger than the window, which
-    # needs users.account_created_date - hence the join to users.
+    # needs users_base.account_created_date - hence the join to users_base.
     joins:
-      - name: users
+      - name: users_base
         relationship: one_to_one
-        sql: "{CUBE}.analytics_id = {users.analytics_id}"
+        sql: "{CUBE}.analytics_id = {users_base.analytics_id}"
 
     dimensions:
       - name: analytics_id
-        sql: analytics_id
+        sql: "{CUBE}.analytics_id"
         type: string
         primary_key: true
         public: false
@@ -20,14 +20,14 @@ cubes:
       # helper: not in the original LookML - replaces the repeated
       # DATE_DIFF('day', DATE(${users.account_created_date}), CURRENT_DATE) expression
       - name: days_since_account_created
-        sql: "DATE_DIFF('day', DATE({users.account_created_date}), CURRENT_DATE)"
+        sql: "DATE_DIFF('day', DATE({users_base.account_created_date}), CURRENT_DATE)"
         type: number
         public: false
 
       - name: d30_revoked_usage_consent
         title: "Revoked Usage Consent (D30)"
         description: "Whether a user revoked their usage analytics consent in the first 30 days of their account"
-        sql: d30_revoke_usage_analytics_consent
+        sql: "{CUBE}.d30_revoke_usage_analytics_consent"
         type: boolean
         meta:
           group_label: "Consents"
@@ -36,7 +36,7 @@ cubes:
       - name: count_d0_sessions
         title: "Count D0 Sessions"
         description: "Number of sessions a user had Day 0"
-        sql: count_d0_sessions
+        sql: "{CUBE}.count_d0_sessions"
         type: number
         meta:
           group_label: "Sessions"
@@ -61,7 +61,7 @@ cubes:
       - name: count_d0_view_subscription_plans
         title: "Count D0 View Subscription Plans"
         description: "Number of buy screens a user viewed Day 0"
-        sql: count_d0_view_subscription_plans
+        sql: "{CUBE}.count_d0_view_subscription_plans"
         type: number
         meta:
           group_label: "Buy Screens"

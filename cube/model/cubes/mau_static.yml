@@ -1,0 +1,32 @@
+cubes:
+  - name: mau_static
+    sql_table: rep.mau_static
+    title: Monthly Active Users
+    description: >
+      Pre-computed monthly active users by platform. One row per month and platform.
+
+    dimensions:
+      # Surrogate key for the assumed month + platform grain. Not needed while
+      # this cube stands alone, but Cube requires it once joins are added.
+      - name: pk
+        sql: "CAST({CUBE}.month AS varchar) || '|' || {CUBE}.platform"
+        type: string
+        primary_key: true
+        public: false
+
+      # Source column is a DATE. Cast to timestamp so Cube's time-dimension
+      # handling (date_trunc, timezone conversion) works cleanly on Athena.
+      - name: month
+        sql: "CAST({CUBE}.month AS timestamp)"
+        type: time
+        description: First day of the reporting month. Query with month granularity.
+
+      - name: platform
+        sql: "LOWER({CUBE}.platform)"
+        type: string
+
+    measures:
+      - name: mau_count
+        sql: "{CUBE}.count_mau"
+        type: sum
+        title: MAU Count

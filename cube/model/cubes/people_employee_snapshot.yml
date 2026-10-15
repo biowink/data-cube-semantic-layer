@@ -1,5 +1,5 @@
 cubes:
-  - name: employee_snapshot
+  - name: people_employee_snapshot
     sql_table: people.raw_bamboohr_employee_snapshot
     public: false
     description: "Daily BambooHR employee snapshot (gender, date of birth). Joined from attrition on the month's reference date; only exposed through the people_gender / people_age views."

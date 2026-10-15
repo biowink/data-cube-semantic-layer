@@ -9,6 +9,10 @@ cubes:
         relationship: many_to_one
         sql: "{CUBE.country} = {market_mapping.country}"
 
+      - name: apple_device_mapping
+        relationship: many_to_one
+        sql: "{CUBE.device_model} = {apple_device_mapping.model_identifier}"
+
     dimensions:
       - name: analytics_id
         sql: analytics_id
