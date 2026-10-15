@@ -5,7 +5,7 @@ cubes:
     public: false
 
     joins:
-      - name: users
+      - name: users_base
         relationship: many_to_one
         sql: "{CUBE}.analytics_id = {users_base.analytics_id}"
 
@@ -35,22 +35,22 @@ cubes:
 
     dimensions:
       - name: id
-        sql: id
+        sql: "{CUBE}.id"
         type: string
         primary_key: true
 
       - name: transaction_id
-        sql: transaction_id
+        sql: "{CUBE}.transaction_id"
         type: string
 
       - name: analytics_id
-        sql: analytics_id
+        sql: "{CUBE}.analytics_id"
         type: string
 
       # dimension_group: backend_created -> base time dim + the timeframes Cube can't
       # derive at query time (day_of_week/day_of_month/day_of_year/week_of_year/month/month_name)
       - name: backend_created_at
-        sql: backend_created_at
+        sql: "{CUBE}.backend_created_at"
         type: time
 
       - name: backend_created_day_of_week
@@ -83,7 +83,7 @@ cubes:
         type: time
 
       - name: country
-        sql: country
+        sql: "{CUBE}.country"
         type: string
         meta:
           group_label: Market
@@ -101,23 +101,23 @@ cubes:
           group_label: Market
 
       - name: currency_exchange_rate
-        sql: currency_exchange_rate
+        sql: "{CUBE}.currency_exchange_rate"
         type: number
 
       - name: customer_currency
-        sql: currency
+        sql: "{CUBE}.currency"
         type: string
         description: >
           In most countries this is the price the user sees in the app store. In the US
           taxes will come on top of this value, so the user see a higher price than this.
 
       - name: customer_price
-        sql: customer_price
+        sql: "{CUBE}.customer_price"
         type: number
 
       # dimension_group: started
       - name: started_at
-        sql: started_at
+        sql: "{CUBE}.started_at"
         type: time
 
       - name: started_date
@@ -126,7 +126,7 @@ cubes:
 
       # dimension_group: expires
       - name: expires_at
-        sql: expires_at
+        sql: "{CUBE}.expires_at"
         type: time
 
       - name: expires_date
@@ -134,29 +134,29 @@ cubes:
         type: time
 
       - name: subscription_id
-        sql: subscription_id
+        sql: "{CUBE}.subscription_id"
         type: string
 
       - name: original_subscription_type
-        sql: original_subscription_type
+        sql: "{CUBE}.original_subscription_type"
         type: string
         meta:
           group_label: "Subscription Type"
 
       - name: subscription_type
-        sql: subscription_type
+        sql: "{CUBE}.subscription_type"
         type: string
         meta:
           group_label: "Subscription Type"
 
       - name: is_in_intro_offer_period
-        sql: is_in_intro_offer_period
+        sql: "{CUBE}.is_in_intro_offer_period"
         type: boolean
         meta:
           group_label: "Subscription Type"
 
       - name: is_reactivation
-        sql: reactivation
+        sql: "{CUBE}.reactivation"
         type: boolean
         meta:
           group_label: "Subscription Type"
@@ -180,7 +180,7 @@ cubes:
           group_label: "Subscription Type"
 
       - name: is_financial_transaction
-        sql: is_financial_transaction
+        sql: "{CUBE}.is_financial_transaction"
         type: boolean
         description: "Filters to events that indicate actual revenue flows (Purchases, Renewals, Refunds, and Payable Actions)"
         meta:
@@ -194,19 +194,19 @@ cubes:
           group_label: "Subscription Type"
 
       - name: days_to_reactivation
-        sql: days_to_reactivation
+        sql: "{CUBE}.days_to_reactivation"
         type: number
 
       - name: platform
-        sql: platform
+        sql: "{CUBE}.platform"
         type: string
 
       - name: product_id
-        sql: product_id
+        sql: "{CUBE}.product_id"
         type: string
 
       - name: subscription_duration
-        sql: subscription_duration
+        sql: "{CUBE}.subscription_duration"
         type: number
 
       - name: partner
@@ -216,7 +216,7 @@ cubes:
           group_label: "Subscription Source"
 
       - name: subpartner
-        sql: subpartner
+        sql: "{CUBE}.subpartner"
         type: string
         meta:
           group_label: "Subscription Source"
@@ -229,19 +229,19 @@ cubes:
           group_label: "Subscription Source"
 
       - name: partner_tier
-        sql: partner_tier
+        sql: "{CUBE}.partner_tier"
         type: string
         meta:
           group_label: "Subscription Source"
 
       - name: campaign
-        sql: campaign
+        sql: "{CUBE}.campaign"
         type: string
         meta:
           group_label: "Subscription Source"
 
       - name: subscription_source
-        sql: subscription_source
+        sql: "{CUBE}.subscription_source"
         type: string
         description: "The source of a subscription event (mobile, web, partner)"
         meta:
@@ -255,11 +255,11 @@ cubes:
           group_label: "Subscription Source"
 
       - name: payment_method
-        sql: payment_method_type
+        sql: "{CUBE}.payment_method_type"
         type: string
 
       - name: code
-        sql: code
+        sql: "{CUBE}.code"
         type: string
         meta:
           group_label: "Vouchers & Codes"
@@ -283,17 +283,17 @@ cubes:
           group_label: "Vouchers & Codes"
 
       - name: code_type
-        sql: code_type
+        sql: "{CUBE}.code_type"
         type: string
         meta:
           group_label: "Vouchers & Codes"
 
       - name: discount_rate
-        sql: discount_rate
+        sql: "{CUBE}.discount_rate"
         type: number
 
       - name: code_tags
-        sql: code_tags
+        sql: "{CUBE}.code_tags"
         type: string
         meta:
           group_label: "Vouchers & Codes"
@@ -311,13 +311,13 @@ cubes:
           group_label: "Vouchers & Codes"
 
       - name: current_code_redemptions
-        sql: code_redeem_count
+        sql: "{CUBE}.code_redeem_count"
         type: number
         meta:
           group_label: "Vouchers & Codes"
 
       - name: max_redemptions
-        sql: code_max_redeems
+        sql: "{CUBE}.code_max_redeems"
         type: number
         meta:
           group_label: "Vouchers & Codes"
@@ -327,7 +327,7 @@ cubes:
       # suggestion list). Dropped; if needed client-side, apply the filter directly.
 
       - name: subscription_type_suggestion
-        sql: subscription_type
+        sql: "{CUBE}.subscription_type"
         type: string
         public: false
 
@@ -337,7 +337,7 @@ cubes:
 #        public: false
 
       - name: tax_rate
-        sql: tax_rate
+        sql: "{CUBE}.tax_rate"
         type: number
         meta:
           format: percent_2
@@ -460,7 +460,7 @@ cubes:
           format: currency
 
       - name: store_fee_rate
-        sql: store_fee_rate
+        sql: "{CUBE}.store_fee_rate"
         type: number
         public: false
 
@@ -565,7 +565,7 @@ cubes:
         format: currency
 
       - name: user_count
-        sql: analytics_id
+        sql: "{CUBE}.analytics_id"
         type: count_distinct
 
       - name: transaction_count
@@ -575,7 +575,7 @@ cubes:
         drill_members: [subscription_type, transaction_id, user_last_properties.market]
 
       - name: average_tax_rate
-        sql: tax_rate
+        sql: "{CUBE}.tax_rate"
         type: avg
         meta:
           format: percent_2
