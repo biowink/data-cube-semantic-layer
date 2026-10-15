@@ -55,17 +55,3 @@ views:
           - name: m2_mau_retention
             format: percent
         prefix: true
-
-    # The explore shows every join under one view_label ("User Marketing Source");
-    # these are the group_labels inside it
-    folders:
-      - name: "Attribution"
-        includes:
-          - adjust_attribution_source_type
-          - adjust_attribution_network
-          - adjust_attribution_network_group
-          - adjust_attribution_campaign
-
-      - name: "Conversion"
-        includes:
-          - user_subscription_status_conversion_at
