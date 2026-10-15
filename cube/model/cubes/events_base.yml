@@ -6,9 +6,9 @@ cubes:
       One row per app event (Iceberg table partitioned by day(derived_tstamp)).
 
     joins:
-      - name: users
+      - name: users_base
         relationship: many_to_one
-        sql: "{CUBE}.analytics_id = {users.analytics_id}"
+        sql: "{CUBE}.analytics_id = {users_base.analytics_id}"
 
       - name: user_profiles
         relationship: many_to_one
@@ -21,6 +21,10 @@ cubes:
       - name: user_last_optional_consent_status
         relationship: one_to_one
         sql: "{CUBE}.analytics_id = {user_last_optional_consent_status.analytics_id}"
+
+      - name: market_mapping
+        relationship: many_to_one
+        sql: "{CUBE.country} = {market_mapping.country}"
 
     dimensions:
       - name: root_id
