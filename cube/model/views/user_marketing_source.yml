@@ -1,0 +1,57 @@
+views:
+  - name: user_marketing_source
+    description: >
+      Migrated from users.model.lkml (explore: user_marketing_source). Information
+      gathered from new users at the How Did You Hear About Clue? screen.
+
+    cubes:
+      - join_path: user_marketing_source_base
+        includes: "*"
+        excludes:
+          - analytics_id
+          - selection_id
+
+      - join_path: user_marketing_source_base.user_first_properties
+        includes:
+          - platform
+          - language
+        prefix: true
+
+      - join_path: user_marketing_source_base.user_last_properties
+        includes:
+          - country
+        prefix: true
+
+      - join_path: user_marketing_source_base.user_last_properties.market_mapping
+        includes:
+          - market
+        prefix: true
+
+      - join_path: user_marketing_source_base.user_profiles
+        includes:
+          - current_age
+          - current_age_group
+        prefix: true
+
+      - join_path: user_marketing_source_base.adjust_attribution
+        includes:
+          - source_type
+          - network
+          - network_group
+          - campaign
+        prefix: true
+
+      # LookML exposed conversion_date; Cube picks the day granularity per query
+      - join_path: user_marketing_source_base.user_subscription_status
+        includes:
+          - conversion
+        prefix: true
+
+      # m2_tracking_retention not included: the LookML reads count_m2_tracking_points,
+      # which the table doesn't have, so the new_user_retention cube has no such measure
+      - join_path: user_marketing_source_base.new_user_retention
+        includes:
+          # views only accept the basic formats; percent = 2 decimals (d3 .2~%)
+          - name: m2_mau_retention
+            format: percent
+        prefix: true
