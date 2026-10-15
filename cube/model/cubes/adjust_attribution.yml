@@ -13,7 +13,7 @@ cubes:
 
     dimensions:
       - name: analytics_id
-        sql: analytics_id
+        sql: "{CUBE}.analytics_id"
         type: string
         primary_key: true
         public: false
@@ -21,7 +21,7 @@ cubes:
       # dimension_group: click (timeframes: raw/time/date/week/month/quarter/year all
       # derivable at query time via Cube granularity) + day_of_year/month_num, which aren't
       - name: click_at
-        sql: click_time
+        sql: "{CUBE}.click_time"
         type: time
 
       - name: click_day_of_year
@@ -34,7 +34,7 @@ cubes:
 
       # dimension_group: install
       - name: install_at
-        sql: install_time
+        sql: "{CUBE}.install_time"
         type: time
 
       - name: install_day_of_year
@@ -47,7 +47,7 @@ cubes:
 
       # dimension_group: reattribution
       - name: reattribution_at
-        sql: reattribution_time
+        sql: "{CUBE}.reattribution_time"
         type: time
 
       - name: reattribution_day_of_year
@@ -109,19 +109,19 @@ cubes:
           group_label: Attribution
 
       - name: campaign
-        sql: campaign
+        sql: "{CUBE}.campaign"
         type: string
         meta:
           group_label: Attribution
 
       - name: adgroup
-        sql: adgroup
+        sql: "{CUBE}.adgroup"
         type: string
         meta:
           group_label: Attribution
 
       - name: creative
-        sql: creative
+        sql: "{CUBE}.creative"
         type: string
         meta:
           group_label: Attribution
@@ -133,19 +133,19 @@ cubes:
           group_label: "First Attribution"
 
       - name: first_campaign
-        sql: first_campaign
+        sql: "{CUBE}.first_campaign"
         type: string
         meta:
           group_label: "First Attribution"
 
       - name: first_adgroup
-        sql: first_adgroup
+        sql: "{CUBE}.first_adgroup"
         type: string
         meta:
           group_label: "First Attribution"
 
       - name: first_creative
-        sql: first_creative
+        sql: "{CUBE}.first_creative"
         type: string
         meta:
           group_label: "First Attribution"

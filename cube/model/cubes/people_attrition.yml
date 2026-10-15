@@ -42,7 +42,7 @@ cubes:
         public: false
 
       - name: employee_id
-        sql: employee_id
+        sql: "{CUBE}.employee_id"
         type: string
         public: false
 
@@ -61,7 +61,7 @@ cubes:
 
       - name: is_partial_month
         description: "The month is still in progress, so its numbers are not final"
-        sql: is_partial_month
+        sql: "{CUBE}.is_partial_month"
         type: boolean
 
       # Filter on true with month_start grouped by quarter to get end-of-quarter
@@ -118,7 +118,7 @@ cubes:
           group_label: "Org"
 
       - name: tenure_months
-        sql: tenure_months
+        sql: "{CUBE}.tenure_months"
         type: number
 
       - name: tenure_band
@@ -133,13 +133,13 @@ cubes:
 
       # Termination
       - name: termination_type
-        sql: termination_type_id
+        sql: "{CUBE}.termination_type_id"
         type: string
         meta:
           group_label: "Termination"
 
       - name: termination_reason
-        sql: termination_reason_id
+        sql: "{CUBE}.termination_reason_id"
         type: string
         meta:
           group_label: "Termination"
@@ -150,24 +150,24 @@ cubes:
 
       - name: headcount_start
         description: "Employees active at the start of the month"
-        sql: active_at_start
+        sql: "{CUBE}.active_at_start"
         type: sum
 
       - name: headcount_end
         description: "Employees active at the end of the month"
-        sql: active_at_end
+        sql: "{CUBE}.active_at_end"
         type: sum
 
       - name: hires
-        sql: hires
+        sql: "{CUBE}.hires"
         type: sum
 
       - name: rehires
-        sql: rehires
+        sql: "{CUBE}.rehires"
         type: sum
 
       - name: exits
-        sql: exits
+        sql: "{CUBE}.exits"
         type: sum
 
       # Average headcount is computed in two steps: per month (start + end) / 2,
@@ -180,7 +180,7 @@ cubes:
         public: false
 
       - name: months
-        sql: month_start
+        sql: "{CUBE}.month_start"
         type: count_distinct
         public: false
 
@@ -199,7 +199,7 @@ cubes:
       # Rolling 12 months: query with month_start at month granularity, and filter
       # is_partial_month = false so the current month isn't in the window.
       - name: exits_12m
-        sql: exits
+        sql: "{CUBE}.exits"
         type: sum
         rolling_window:
           trailing: 12 month
@@ -213,7 +213,7 @@ cubes:
         public: false
 
       - name: months_12m
-        sql: month_start
+        sql: "{CUBE}.month_start"
         type: count_distinct
         rolling_window:
           trailing: 12 month

@@ -44,7 +44,7 @@ cubes:
 
     dimensions:
       - name: analytics_id
-        sql: analytics_id
+        sql: "{CUBE}.analytics_id"
         type: string
         primary_key: true
 

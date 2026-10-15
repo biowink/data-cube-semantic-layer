@@ -14,41 +14,41 @@ cubes:
         public: false
 
       - name: article_id
-        sql: article_id
+        sql: "{CUBE}.article_id"
         type: string
 
       - name: query_id
-        sql: query_id
+        sql: "{CUBE}.query_id"
         type: string
 
       - name: version_id
-        sql: version_id
+        sql: "{CUBE}.version_id"
         type: string
         public: false
 
       - name: article_rank
-        sql: article_rank
+        sql: "{CUBE}.article_rank"
         type: number
 
       - name: article_title
-        sql: article_title
+        sql: "{CUBE}.article_title"
         type: string
 
       - name: created_at
-        sql: created_at
+        sql: "{CUBE}.created_at"
         type: time
 
       - name: created_execution_date
-        sql: created_execution_date
+        sql: "{CUBE}.created_execution_date"
         type: time
 
       - name: etl_created_at
-        sql: etl_created_at
+        sql: "{CUBE}.etl_created_at"
         type: time
         public: false
 
       - name: query_length
-        sql: query_length
+        sql: "{CUBE}.query_length"
         type: number
 
       - name: search_query
@@ -56,17 +56,17 @@ cubes:
         type: string
 
       - name: similarity_score
-        sql: similarity_score
+        sql: "{CUBE}.similarity_score"
         type: number
         meta:
           value_format: decimal_2
 
       - name: subtopic
-        sql: subtopic
+        sql: "{CUBE}.subtopic"
         type: string
 
       - name: topic
-        sql: topic
+        sql: "{CUBE}.topic"
         type: string
 
       - name: is_zero_result
@@ -106,7 +106,7 @@ cubes:
 
     measures:
       - name: total_searches
-        sql: query_id
+        sql: "{CUBE}.query_id"
         type: count_distinct
 
       - name: total_results_count
@@ -115,11 +115,11 @@ cubes:
           - sql: "{CUBE}.article_id IS NOT NULL"
 
       - name: unique_article_count
-        sql: article_id
+        sql: "{CUBE}.article_id"
         type: count_distinct
 
       - name: zero_result_searches
-        sql: query_id
+        sql: "{CUBE}.query_id"
         type: count_distinct
         filters:
           - sql: "{CUBE}.article_id IS NULL"
@@ -158,7 +158,7 @@ cubes:
           value_format: decimal_0
 
       - name: avg_article_rank
-        sql: article_rank
+        sql: "{CUBE}.article_rank"
         type: avg
         filters:
           - sql: "{CUBE}.article_id IS NOT NULL"

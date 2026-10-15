@@ -26,7 +26,7 @@ cubes:
         public: false
 
       - name: employee_id
-        sql: employee_id
+        sql: "{CUBE}.employee_id"
         type: string
         public: false
 
@@ -37,18 +37,18 @@ cubes:
 
       - name: is_partial_month
         description: "The month is still in progress, so its numbers are not final"
-        sql: is_partial_month
+        sql: "{CUBE}.is_partial_month"
         type: boolean
 
     measures:
       - name: expected_days
         description: "Mon-Fri working days the employees were active (public holidays not excluded)"
-        sql: expected_days
+        sql: "{CUBE}.expected_days"
         type: sum
 
       - name: absence_days
         description: "Days of time off on expected working days (hours / 8, capped at 1 day per employee per day)"
-        sql: absence_days
+        sql: "{CUBE}.absence_days"
         type: sum
 
       - name: absence_rate

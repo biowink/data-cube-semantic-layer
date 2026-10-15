@@ -19,11 +19,11 @@ cubes:
         type: time
 
       - name: database_name
-        sql: database_name
+        sql: "{CUBE}.database_name"
         type: string
 
       - name: table_name
-        sql: table_name
+        sql: "{CUBE}.table_name"
         type: string
 
       - name: full_table_name
@@ -31,15 +31,15 @@ cubes:
         type: string
 
       - name: enabled
-        sql: enabled
+        sql: "{CUBE}.enabled"
         type: boolean
 
       - name: most_recent_run
-        sql: most_recent_run
+        sql: "{CUBE}.most_recent_run"
         type: boolean
 
       - name: optimizer_type
-        sql: optimizer_type
+        sql: "{CUBE}.optimizer_type"
         type: string
 
     measures:
@@ -52,35 +52,35 @@ cubes:
 
       - name: total_active_size_mb
         title: "Total Active Size MB"
-        sql: active_size_mb
+        sql: "{CUBE}.active_size_mb"
         type: sum
         meta:
           format: decimal_2
 
       - name: total_size_mb
         title: "Total Size MB"
-        sql: total_size_mb
+        sql: "{CUBE}.total_size_mb"
         type: sum
         meta:
           format: decimal_2
 
       - name: total_row_count
         title: "Total Row Count"
-        sql: logical_count
+        sql: "{CUBE}.logical_count"
         type: sum
         meta:
           format: decimal_0
 
       - name: total_file_count
         title: "Total File Count"
-        sql: file_count
+        sql: "{CUBE}.file_count"
         type: sum
         meta:
           format: decimal_0
 
       - name: total_partition_count
         title: "Total Partition Count"
-        sql: partition_count
+        sql: "{CUBE}.partition_count"
         type: sum
         meta:
           format: decimal_0

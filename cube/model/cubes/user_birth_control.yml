@@ -5,14 +5,14 @@ cubes:
 
     dimensions:
       - name: analytics_id
-        sql: analytics_id
+        sql: "{CUBE}.analytics_id"
         type: string
         primary_key: true
         public: false
 
       # dimension_group: created_at (date, week, month, year) - all native Cube granularities
       - name: created_at
-        sql: created_at
+        sql: "{CUBE}.created_at"
         type: time
 
       - name: birth_control_type
@@ -27,9 +27,9 @@ cubes:
         type: string
 
       - name: birth_control_variant
-        sql: variant
+        sql: "{CUBE}.variant"
         type: string
 
       - name: birth_control_schedule
-        sql: schedule
+        sql: "{CUBE}.schedule"
         type: string
