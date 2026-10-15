@@ -6,23 +6,23 @@ cubes:
 
     dimensions:
       - name: analytics_id
-        sql: analytics_id
+        sql: "{CUBE}.analytics_id"
         type: string
         primary_key: true
         public: false
 
       - name: ui_scheme
-        sql: ui_scheme
+        sql: "{CUBE}.ui_scheme"
         type: string
 
       - name: measurement_system
-        sql: measurement_system
+        sql: "{CUBE}.measurement_system"
         type: string
 
       - name: temperature_unit
-        sql: temperature_unit
+        sql: "{CUBE}.temperature_unit"
         type: string
 
       - name: has_widget
-        sql: has_widget
+        sql: "{CUBE}.has_widget"
         type: boolean

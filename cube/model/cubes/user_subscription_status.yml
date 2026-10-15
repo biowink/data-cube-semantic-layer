@@ -7,7 +7,7 @@ cubes:
 
     dimensions:
       - name: analytics_id
-        sql: analytics_id
+        sql: "{CUBE}.analytics_id"
         type: string
         primary_key: true
         public: false
@@ -15,7 +15,7 @@ cubes:
       # Conversion
       # dimension_group: conversion (raw/date/week/month/quarter/year) - all derivable at query time
       - name: conversion_at
-        sql: conversion_ts
+        sql: "{CUBE}.conversion_ts"
         type: time
 
       # CASE wrapper keeps LookML's COALESCE(..., FALSE): NULL counts as No
@@ -25,7 +25,7 @@ cubes:
         description: "Whether a user has ever purchased a mobile or web subscription"
 
       - name: conversion_subscription_source
-        sql: conversion_subscription_source
+        sql: "{CUBE}.conversion_subscription_source"
         type: string
 
       # Current Subscription Status

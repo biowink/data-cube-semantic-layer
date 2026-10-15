@@ -43,21 +43,21 @@ cubes:
         public: false
 
       - name: analytics_id
-        sql: analytics_id
+        sql: "{CUBE}.analytics_id"
         type: string
         public: false
 
       - name: list_version
-        sql: list_version
+        sql: "{CUBE}.list_version"
         type: string
 
       - name: count_marketing_sources
-        sql: count_marketing_sources
+        sql: "{CUBE}.count_marketing_sources"
         type: number
 
       # dimension_group: user_reply (raw/date/week/month/quarter/year) - all derivable at query time
       - name: user_reply_at
-        sql: user_selection_ts
+        sql: "{CUBE}.user_selection_ts"
         type: time
 
       # CASE wrapper: Cube filters append `= CAST(? AS BOOLEAN)`
@@ -66,16 +66,16 @@ cubes:
         type: boolean
 
       - name: marketing_source_type
-        sql: marketing_source_type
+        sql: "{CUBE}.marketing_source_type"
         type: string
 
       - name: marketing_source_text
-        sql: marketing_source_text
+        sql: "{CUBE}.marketing_source_text"
         type: string
 
     measures:
       - name: user_count
-        sql: analytics_id
+        sql: "{CUBE}.analytics_id"
         type: count_distinct
 
       - name: selection_count
