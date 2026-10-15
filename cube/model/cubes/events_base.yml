@@ -4,6 +4,7 @@ cubes:
     title: Events
     description: >
       One row per app event (Iceberg table partitioned by day(derived_tstamp)).
+    public: false
 
     joins:
       - name: users_base
