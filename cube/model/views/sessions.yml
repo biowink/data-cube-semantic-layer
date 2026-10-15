@@ -22,10 +22,9 @@ views:
         includes: "*"
         prefix: true
 
-# commenting out this cube as it isn't built yet
-#      - join_path: sessions_base.users_base.user_subscription_status
-#        includes: "*"
-#        prefix: true
+      - join_path: sessions_base.users_base.user_subscription_status
+        includes: "*"
+        prefix: true
 
       - join_path: sessions_base.users_base.adjust_attribution
         includes: "*"

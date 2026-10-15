@@ -3,9 +3,10 @@
     description: >
       Migrated from users.lkml (explore: users) - mainly for new users charts.
       Joins user_last_properties, user_profiles, user_last_optional_consent_status,
-      new_user_activation, new_user_retention, adjust_attribution and (via
-      user_last_properties) market_mapping and apple_device_mapping. Explore joins
-      to views not yet migrated to cubes are left out.
+      new_user_activation, new_user_retention, adjust_attribution,
+      user_first_properties, user_subscription_status, user_last_device_properties
+      and (via user_last_properties) market_mapping and apple_device_mapping.
+      Explore joins to views not yet migrated to cubes are left out.
 
     # Cube's field marked public:false alone isn't enough to keep a field out of BI tools
     # connected via the SQL API. It also has to be excluded from the view.
@@ -77,6 +78,25 @@
           - analytics_id
 
       - join_path: users_base.braze_global_control_group
+        includes: "*"
+        prefix: true
+        excludes:
+          - analytics_id
+
+      - join_path: users_base.user_first_properties
+        includes: "*"
+        prefix: true
+        excludes:
+          - analytics_id
+
+      - join_path: users_base.user_subscription_status
+        includes: "*"
+        prefix: true
+        excludes:
+          - analytics_id
+          - product_tier
+
+      - join_path: users_base.user_last_device_properties
         includes: "*"
         prefix: true
         excludes:
