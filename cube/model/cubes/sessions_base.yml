@@ -221,9 +221,50 @@ cubes:
           END
         type: string
 
+      # --- In Session Event Counts ---
       - name: count_view_subscription_plans
         sql: "{CUBE}.count_view_subscription_plans"
         type: number
+
+      - name: count_change_mode
+        sql: "{CUBE}.count_change_mode"
+        type: number
+        public: false
+
+      - name: count_open_cycle_view
+        sql: "{CUBE}.count_open_cycle_view"
+        type: number
+        public: false
+
+      - name: count_open_calendar
+        sql: "{CUBE}.count_open_calendar"
+        type: number
+        public: false
+
+      - name: count_open_data_entry
+        sql: "{CUBE}.count_open_data_entry"
+        type: number
+        public: false
+
+      - name: count_exit_data_entry
+        sql: "{CUBE}.count_exit_data_entry"
+        type: number
+        public: false
+
+      - name: count_track_period
+        sql: "{CUBE}.count_track_period"
+        type: number
+        public: false
+
+      - name: count_open_analysis
+        sql: "{CUBE}.count_open_analysis"
+        type: number
+        public: false
+
+      - name: count_open_content_tab
+        sql: "{CUBE}.count_open_content_tab"
+        type: number
+        public: false
 
       # --- In Session Event Booleans ---
       - name: did_start_subscription
