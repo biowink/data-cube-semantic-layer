@@ -1,9 +1,26 @@
 cubes:
-  - name: mobile_events_base
+  - name: events_base
     sql_table: der.events
     title: Events
     description: >
       One row per app event (Iceberg table partitioned by day(derived_tstamp)).
+
+    joins:
+      - name: users
+        relationship: many_to_one
+        sql: "{CUBE}.analytics_id = {users.analytics_id}"
+
+      - name: user_profiles
+        relationship: many_to_one
+        sql: "{CUBE}.analytics_id = {user_profiles.analytics_id}"
+
+      - name: user_last_properties
+        relationship: many_to_one
+        sql: "{CUBE}.analytics_id = {user_last_properties.analytics_id}"
+
+      - name: user_last_optional_consent_status
+        relationship: one_to_one
+        sql: "{CUBE}.analytics_id = {user_last_optional_consent_status.analytics_id}"
 
     dimensions:
       - name: root_id
@@ -138,6 +155,12 @@ cubes:
       - name: buy_screen_mode
         sql: |
           NULLIF(JSON_EXTRACT_SCALAR({CUBE}.event_properties, '$["Buy Screen Mode"]'), '')
+        type: string
+        public: false
+
+      - name: purchased_mode
+        sql: |
+          NULLIF(JSON_EXTRACT_SCALAR({CUBE}.event_properties, '$["Purchased Mode"]'), '')
         type: string
         public: false
 
