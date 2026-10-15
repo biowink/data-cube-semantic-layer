@@ -1,6 +1,7 @@
 cubes:
-  - name: adjust_campaign_performance
+  - name: adjust_campaign_performance_base
     sql_table: der.adjust_campaign_performance
+    public: false
 
     dimensions:
       - name: primary_key
