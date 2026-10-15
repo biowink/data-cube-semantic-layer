@@ -15,7 +15,7 @@ cubes:
 
     dimensions:
       - name: analytics_id
-        sql: analytics_id
+        sql: "{CUBE}.analytics_id"
         type: string
         primary_key: true
         public: false
@@ -23,7 +23,7 @@ cubes:
       # dimension_group: last_session -> base time dim + the two timeframes Cube
       # can't derive at query time (day_of_year/day_of_week)
       - name: last_session_ts
-        sql: session_ts
+        sql: "{CUBE}.session_ts"
         type: time
 
       - name: last_session_day_of_week
@@ -35,37 +35,37 @@ cubes:
         type: number
 
       - name: platform
-        sql: platform
+        sql: "{CUBE}.platform"
         type: string
 
       - name: mode
-        sql: mode
+        sql: "{CUBE}.mode"
         type: string
 
       # dimension: product_tier / is_subscribed were commented out in the source LookML - not carried over
 
       - name: app_version
-        sql: app_version
+        sql: "{CUBE}.app_version"
         type: string
 
       - name: major_app_version
-        sql: major_app_version
+        sql: "{CUBE}.major_app_version"
         type: number
 
       - name: minor_app_version
-        sql: minor_app_version
+        sql: "{CUBE}.minor_app_version"
         type: number
 
       - name: country
-        sql: country_name
+        sql: "{CUBE}.country_name"
         type: string
 
       - name: country_code
-        sql: country_code
+        sql: "{CUBE}.country_code"
         type: string
 
       - name: state
-        sql: region_name
+        sql: "{CUBE}.region_name"
         type: string
 
       - name: market
@@ -84,13 +84,13 @@ cubes:
         type: string
 
       - name: device_manufacturer
-        sql: device_manufacturer
+        sql: "{CUBE}.device_manufacturer"
         type: string
         meta:
           group_label: "Device Info"
 
       - name: device_model
-        sql: device_model
+        sql: "{CUBE}.device_model"
         type: string
         meta:
           group_label: "Device Info"
@@ -107,13 +107,13 @@ cubes:
           group_label: "Device Info"
 
       - name: locale
-        sql: locale
+        sql: "{CUBE}.locale"
         type: string
         meta:
           group_label: "Language"
 
       - name: language
-        sql: language
+        sql: "{CUBE}.language"
         type: string
         meta:
           group_label: "Language"
@@ -146,7 +146,7 @@ cubes:
           group_label: "Language"
 
       - name: os_version
-        sql: os_version
+        sql: "{CUBE}.os_version"
         type: string
         title: "OS Version"
         meta:

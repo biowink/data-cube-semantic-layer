@@ -11,12 +11,12 @@ cubes:
 
     dimensions:
       - name: pk
-        sql: prim_key
+        sql: "{CUBE}.prim_key"
         type: string
         primary_key: true
         public: false
 
       - name: rate
-        sql: rate
+        sql: "{CUBE}.rate"
         type: number
         public: false

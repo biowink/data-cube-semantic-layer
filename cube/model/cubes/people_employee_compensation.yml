@@ -34,15 +34,15 @@ cubes:
         public: false
 
       - name: pay_type
-        sql: pay_type
+        sql: "{CUBE}.pay_type"
         type: string
 
       - name: paid_per
-        sql: paid_per
+        sql: "{CUBE}.paid_per"
         type: string
 
       - name: rate_currency
-        sql: rate_currency
+        sql: "{CUBE}.rate_currency"
         type: string
 
       # Only monthly salaries are comparable - hourly, per-piece, commission and

@@ -8,7 +8,7 @@ cubes:
       # no primary key declared in the source LookML view; country_name is the
       # natural unique key of this country/market/region mapping table
       - name: country
-        sql: country_name
+        sql: "{CUBE}.country_name"
         type: string
         primary_key: true
 
