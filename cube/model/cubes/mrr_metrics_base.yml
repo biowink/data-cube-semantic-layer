@@ -1,0 +1,232 @@
+cubes:
+  - name: mrr_metrics_base
+    title: MRR Metrics
+    description: >
+      MRR metrics for revenue growth accounting. One row per user, month recognized
+      and product. Prefiltered to months before the previous month.
+    public: false
+    # The filter is always on. month_recognized < start of the current month.
+    sql: >
+      SELECT *
+      FROM rep.mrr_metrics
+      WHERE month_recognized < DATE_TRUNC('month', CURRENT_DATE)
+
+    joins:
+      - name: users_base
+        relationship: many_to_one
+        sql: "{CUBE}.analytics_id = {users_base.analytics_id}"
+      - name: user_profiles
+        relationship: many_to_one
+        sql: "{CUBE}.analytics_id = {user_profiles.analytics_id}"
+      - name: user_last_properties
+        relationship: many_to_one
+        sql: "{CUBE}.analytics_id = {user_last_properties.analytics_id}"
+
+    dimensions:
+      # ---------------------------------------------------------------- IDs
+      # Grain: analytics_id + month_recognized + product_id.
+      # COALESCE keeps the key non-NULL if any part is NULL.
+      - name: pk
+        sql: >
+          COALESCE({CUBE}.analytics_id, '') || '|' ||
+          COALESCE(CAST({CUBE}.month_recognized AS VARCHAR), '') || '|' ||
+          COALESCE({CUBE}.product_id, '')
+        type: string
+        primary_key: true
+        public: false
+
+      - name: analytics_id
+        sql: "{CUBE}.analytics_id"
+        type: string
+
+      # -------------------------------------------------------------- Dates
+      - name: month_recognized
+        sql: "CAST({CUBE}.month_recognized AS TIMESTAMP)"
+        type: time
+        description: The month the MRR is recognized in. Query with month granularity.
+
+      - name: user_conversion_cohort
+        description: >
+          The date when the user first purchased a subscription.
+          It does not need to be the same subscription in the row.
+        sql: "CAST({CUBE}.user_conversion_cohort AS TIMESTAMP)"
+        type: time
+
+      - name: months_since_conversion
+        description: Months since the user first purchased a subscription
+        sql: "DATE_DIFF('month', {CUBE}.user_conversion_cohort, {CUBE}.month_recognized)"
+        type: number
+
+      # ------------------------------------------------------ Subscription
+      - name: platform
+        sql: "{CUBE}.platform"
+        type: string
+
+      - name: product_id
+        sql: "{CUBE}.product_id"
+        type: string
+
+      - name: subscription_duration
+        sql: "{CUBE}.subscription_duration"
+        type: number
+
+      - name: country
+        sql: "{CUBE}.country"
+        type: string
+
+      - name: subscription_source
+        description: The source of a subscription (mobile, web, partner)
+        sql: "{CUBE}.subscription_source"
+        type: string
+
+      - name: subscription_source_with_partner
+        description: The source of a subscription event, augmented with partner information
+        sql: "COALESCE({CUBE}.partner, {CUBE}.subscription_source)"
+        type: string
+
+      - name: partner
+        sql: "{CUBE}.partner"
+        type: string
+
+      - name: subpartner
+        sql: "{CUBE}.subpartner"
+        type: string
+
+      - name: stream
+        description: Whether a subscription belongs to our B2B2C or B2C revenue stream
+        sql: |
+          CASE WHEN {CUBE}.is_partner_subscription THEN 'B2B2C'
+               WHEN NOT {CUBE}.is_partner_subscription THEN 'B2C'
+          END
+        type: string
+
+      # ------------------------------------------------------------- Flags
+      - name: is_partner_subscription
+        description: Whether a subscription is from a Partner subscription (i.e. Gympass)
+        sql: "COALESCE({CUBE}.is_partner_subscription, false)"
+        type: boolean
+
+      - name: is_up_for_renewal
+        sql: "COALESCE({CUBE}.is_up_for_renewal, false)"
+        type: boolean
+
+    measures:
+      # ------------------------------------------------------ MRR movements
+      - name: existing_mrr
+        title: Existing MRR
+        description: Existing MRR at the start of the period
+        sql: "{CUBE}.existing_mrr + {CUBE}.historical_mrr"
+        type: sum
+
+      - name: historical_mrr
+        title: Historical MRR
+        description: MRR from subscriptions starting before Nov 2019, when backend began collecting subscription records
+        sql: "{CUBE}.historical_mrr"
+        type: sum
+
+      - name: new_mrr
+        title: New MRR
+        description: MRR from new users, i.e. those making their first subscription purchase
+        sql: "{CUBE}.new_mrr"
+        type: sum
+
+      - name: reactivation_mrr
+        title: Reactivation MRR
+        description: MRR from reactivating users, i.e. those were not subscribed the previous month but also had been subscribed before
+        sql: "{CUBE}.reactivation_mrr"
+        type: sum
+
+      - name: expansion_mrr
+        title: Expansion MRR
+        description: MRR increase from subscribed users, either from the product price increasing or the user moving to a more expensive product
+        sql: "{CUBE}.expansion_mrr"
+        type: sum
+
+      - name: contraction_mrr
+        title: Contraction MRR
+        description: MRR decrease from subscribed users, either from the product price decreasing or the user moving to a cheaper product
+        sql: "{CUBE}.contraction_mrr"
+        type: sum
+
+      - name: churned_mrr
+        title: Churned MRR
+        description: MRR loss from churning users
+        sql: "{CUBE}.churned_mrr"
+        type: sum
+
+      - name: net_mrr
+        title: Net MRR
+        description: Net MRR at the end of the period (i.e. Existing plus gained MRR minus lost MRR)
+        sql: "{CUBE}.net_mrr"
+        type: sum
+
+      # ------------------------------------------------------ Fees & refunds
+      - name: store_fees
+        description: Store fees from subscription purchases/renewals
+        sql: "{CUBE}.store_fee_euro * -1"
+        type: sum
+
+      - name: refund_revenue
+        description: Revenue from refunded subscriptions
+        sql: "{CUBE}.refund_revenue"
+        type: sum
+
+      # ------------------------------------------------------------- Users
+      - name: mrr_paying_users
+        title: MRR Paying Users
+        description: Count of users contributing MRR in the month; includes users who have gotten a refund
+        sql: "{CUBE}.analytics_id"
+        type: count_distinct
+        filters:
+          - sql: "{CUBE}.net_mrr > 0"
+
+      # ---------------------------------------------------- Derived metrics
+      # type: number measures are calculated from the measures above.
+      - name: recognized_revenue
+        description: Recognized revenue in the month; same as net MRR
+        sql: "{net_mrr}"
+        type: number
+
+      - name: gross_margin_i
+        title: Gross Margin I
+        description: Recognized revenue in the month; net MRR less refunds and store fees
+        sql: "{net_mrr} + {store_fees}"
+        type: number
+
+      - name: arr
+        title: ARR
+        description: Annual run rate based on MRR (i.e. MRR times 12)
+        sql: "{net_mrr} * 12"
+        type: number
+
+      - name: arppu
+        title: ARPPU
+        description: Average MRR contributed per user contributed MRR (i.e. MRR > 0 for the period)
+        sql: "{net_mrr} / NULLIF({mrr_paying_users}, 0)"
+        type: number
+
+      - name: mrr_growth_rate
+        title: MRR Growth Rate
+        description: MoM growth in MRR
+        sql: "{net_mrr} / NULLIF({existing_mrr}, 0) - 1"
+        type: number
+        format: percent
+
+      - name: net_mrr_churn_rate
+        title: Net MRR Churn Rate
+        description: Net MRR churn from existing subscribers (Churned and Contraction MRR offset by Expansion MRR as a share of Existing MRR)
+        sql: "({churned_mrr} + {contraction_mrr} + {expansion_mrr}) / NULLIF({existing_mrr}, 0) * -1"
+        type: number
+        format: percent
+
+      - name: gross_mrr_churn_rate
+        title: Gross MRR Churn Rate
+        description: Gross MRR churn from existing subscribers (Churned and Contraction MRR as a share of Existing MRR)
+        sql: "({churned_mrr} + {contraction_mrr}) / NULLIF({existing_mrr}, 0) * -1"
+        type: number
+        format: percent
+
+      - name: quick_ratio
+        description: The ratio of MRR inflows (New, Expansion, Reactivation) to MRR outflows (Contraction, Churned); values >1 indicate growth
+        sql: "({new_mrr} + {expansion_mrr} + {reactivation_mrr}) / NULLIF({contraction_mrr} + {churned_mrr}, 0) * -1"
+        type: number

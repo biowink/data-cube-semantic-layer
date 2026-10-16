@@ -61,6 +61,12 @@
         excludes:
           - analytics_id
 
+      - join_path: users_base.user_account_source
+        includes: "*"
+        prefix: true
+        excludes:
+          - analytics_id
+
       - join_path: users_base.user_last_properties.market_mapping
         includes: "*"
         prefix: true

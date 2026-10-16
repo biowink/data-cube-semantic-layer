@@ -1,0 +1,223 @@
+cubes:
+  - name: events_base
+    sql_table: der.events
+    title: Events
+    description: >
+      One row per app event (Iceberg table partitioned by day(derived_tstamp)).
+    public: false
+
+    joins:
+      - name: users_base
+        relationship: many_to_one
+        sql: "{CUBE}.analytics_id = {users_base.analytics_id}"
+
+      - name: user_profiles
+        relationship: many_to_one
+        sql: "{CUBE}.analytics_id = {user_profiles.analytics_id}"
+
+      - name: user_last_properties
+        relationship: many_to_one
+        sql: "{CUBE}.analytics_id = {user_last_properties.analytics_id}"
+
+      - name: user_last_optional_consent_status
+        relationship: one_to_one
+        sql: "{CUBE}.analytics_id = {user_last_optional_consent_status.analytics_id}"
+
+      - name: market_mapping
+        relationship: many_to_one
+        sql: "{CUBE.country} = {market_mapping.country}"
+
+    dimensions:
+      - name: root_id
+        sql: "{CUBE}.root_id"
+        type: string
+        primary_key: true
+        public: true
+        title: Event ID
+
+      - name: analytics_id
+        sql: "{CUBE}.analytics_id"
+        type: string
+
+      - name: device_id
+        sql: "{CUBE}.sp_device_id"
+        type: string
+
+      - name: session_id
+        sql: "{CUBE}.session_id"
+        type: string
+
+      - name: subscription_transaction_id
+        sql: |
+          NULLIF(JSON_EXTRACT_SCALAR({CUBE}.event_properties, '$["Transaction Id"]'), '')
+        type: string
+
+      # --------------------------------------------------------- Timestamps
+      # Partition column. Filtering on this dimension prunes Iceberg partitions.
+      - name: event_time
+        sql: "{CUBE}.derived_tstamp"
+        type: time
+
+      - name: collector_time
+        sql: "{CUBE}.collector_tstamp"
+        type: time
+        public: false
+
+      # -------------------------------------------------------- App version
+      - name: app_build
+        sql: "{CUBE}.app_build"
+        type: string
+
+      - name: app_version
+        sql: "{CUBE}.app_version"
+        type: string
+
+      - name: major_app_version
+        sql: "{CUBE}.major_app_version"
+        type: number
+
+      # --------------------------------------------------------- OS version
+      - name: os_version
+        sql: "{CUBE}.os_version"
+        type: string
+
+      # TRY_CAST instead of CAST: a non-numeric os_version returns NULL
+      # instead of failing the whole query.
+      - name: major_os_version
+        sql: "TRY_CAST(SPLIT_PART({CUBE}.os_version, '.', 1) AS INTEGER)"
+        type: number
+
+      - name: minor_os_version
+        sql: "TRY_CAST(SPLIT_PART({CUBE}.os_version, '.', 2) AS INTEGER)"
+        type: number
+
+      # ------------------------------------------------------------- Device
+      - name: device_manufacturer
+        sql: "{CUBE}.device_manufacturer"
+        type: string
+
+      - name: device_model
+        sql: "{CUBE}.device_model"
+        type: string
+
+      - name: platform
+        sql: "{CUBE}.platform"
+        type: string
+
+      # ---------------------------------------------------------- Geography
+      - name: country
+        sql: "{CUBE}.country_name"
+        type: string
+
+      # ----------------------------------------------------------- Language
+      - name: locale
+        sql: "{CUBE}.locale"
+        type: string
+
+      - name: language
+        sql: "{CUBE}.language"
+        type: string
+
+      - name: is_language_localised
+        description: Whether a user's language is one of existing Clue localisation languages
+        sql: |
+          COALESCE({CUBE}.language IN (
+            'English', 'Chinese', 'Danish', 'Dutch; Flemish', 'French', 'German',
+            'Hindi', 'Indonesian', 'Italian', 'Japanese', 'Norwegian', 'Polish',
+            'Portuguese', 'Russian', 'Spanish; Castilian', 'Swedish', 'Thai',
+            'Turkish', 'Vietnamese', 'Arabic', 'Malay', 'Romanian; Moldavian; Moldovan'
+          ), false)
+        type: boolean
+
+      - name: localisation_language
+        description: The existing Clue localised languages, with other languages grouped as Other
+        sql: "CASE WHEN {CUBE.is_language_localised} THEN {CUBE}.language ELSE 'Other' END"
+        type: string
+
+      # ------------------------------------------------------ Event details
+      - name: mobile_event_name
+        sql: "{CUBE}.mobile_event_name"
+        type: string
+
+      - name: event_properties
+        sql: "{CUBE}.event_properties"
+        type: string
+
+      - name: product_tier
+        sql: "{CUBE}.product_tier"
+        type: string
+
+      # The mode property changes only after a user subscribed. For subscription
+      # events we want the mode the user was entering (Purchased Mode property).
+      - name: mode
+        sql: |
+          CASE WHEN {CUBE}.mobile_event_name NOT IN ('View Subscription Plans', 'Subscription Started', 'Close Subscription Plans')
+               THEN {CUBE}.mode
+               ELSE COALESCE({CUBE.purchased_mode}, {CUBE.buy_screen_mode})
+          END
+        type: string
+
+      - name: buy_screen_mode
+        sql: |
+          NULLIF(JSON_EXTRACT_SCALAR({CUBE}.event_properties, '$["Buy Screen Mode"]'), '')
+        type: string
+        public: false
+
+      - name: purchased_mode
+        sql: |
+          NULLIF(JSON_EXTRACT_SCALAR({CUBE}.event_properties, '$["Purchased Mode"]'), '')
+        type: string
+        public: false
+
+      # ------------------------------------------------- Navigation context
+      - name: navigation_context
+        sql: "NULLIF({CUBE}.navigation_context, '')"
+        type: string
+
+      # ------------------------------------------------------------ Content
+      - name: article_category
+        sql: |
+          NULLIF(JSON_EXTRACT_SCALAR({CUBE}.event_properties, '$["Article Category"]'), '')
+        type: string
+
+      - name: topic_name
+        sql: |
+          NULLIF(JSON_EXTRACT_SCALAR({CUBE}.event_properties, '$["Topic Name"]'), '')
+        type: string
+
+      - name: meta_id
+        title: Meta ID
+        sql: |
+          NULLIF(REPLACE(JSON_EXTRACT_SCALAR({CUBE}.event_properties, '$["Meta ID"]'), ',', ''), '')
+        type: string
+
+      - name: article_title
+        sql: |
+          TRIM(NULLIF(JSON_EXTRACT_SCALAR({CUBE}.event_properties, '$["Article Title"]'), ''))
+        type: string
+
+      # ------------------------------------------------------- Subscription
+      - name: subscription_product_id
+        sql: |
+          NULLIF(JSON_EXTRACT_SCALAR({CUBE}.event_properties, '$["Product Id"]'), '')
+        type: string
+
+    measures:
+      - name: event_count
+        type: count
+
+      - name: user_count
+        sql: "{CUBE}.analytics_id"
+        type: count_distinct
+
+      - name: device_count
+        sql: "{CUBE}.sp_device_id"
+        type: count_distinct
+
+      - name: session_count
+        sql: "{CUBE}.session_id"
+        type: count_distinct
+
+      - name: min_app_version
+        sql: "MIN({CUBE}.app_version)"
+        type: string
