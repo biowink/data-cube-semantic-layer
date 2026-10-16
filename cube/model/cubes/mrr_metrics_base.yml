@@ -11,15 +11,16 @@ cubes:
       FROM rep.mrr_metrics
       WHERE month_recognized < DATE_TRUNC('month', CURRENT_DATE)
 
-       - name: users
-         relationship: many_to_one
-         sql: "{CUBE}.analytics_id = {users.analytics_id}"
-       - name: user_profiles
-         relationship: many_to_one
-         sql: "{CUBE}.analytics_id = {user_profiles.analytics_id}"
-       - name: user_last_properties
-         relationship: many_to_one
-         sql: "{CUBE}.analytics_id = {user_last_properties.analytics_id}"
+    joins:
+      - name: users_base
+        relationship: many_to_one
+        sql: "{CUBE}.analytics_id = {users_base.analytics_id}"
+      - name: user_profiles
+        relationship: many_to_one
+        sql: "{CUBE}.analytics_id = {user_profiles.analytics_id}"
+      - name: user_last_properties
+        relationship: many_to_one
+        sql: "{CUBE}.analytics_id = {user_last_properties.analytics_id}"
 
     dimensions:
       # ---------------------------------------------------------------- IDs
@@ -40,7 +41,7 @@ cubes:
 
       # -------------------------------------------------------------- Dates
       - name: month_recognized
-        sql: "{CUBE}.month_recognized"
+        sql: "CAST({CUBE}.month_recognized AS TIMESTAMP)"
         type: time
         description: The month the MRR is recognized in. Query with month granularity.
 
