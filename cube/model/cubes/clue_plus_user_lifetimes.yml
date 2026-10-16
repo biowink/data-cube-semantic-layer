@@ -24,7 +24,7 @@ cubes:
       # Source columns are DATE; cast to timestamp for Cube's time handling.
       # date is the partition column: check that filters still prune (see notes).
       - name: date
-        sql: "CAST({CUBE}.date AS TIMESTAMP)"
+        sql: "{CUBE}.date"
         type: time
 
       - name: account_created

@@ -1,0 +1,24 @@
+views:
+  - name: mrr_metrics
+    title: MRR Metrics
+    description: This view shows MRR metrics for revenue growth accounting.
+
+    cubes:
+      - join_path: mrr_metrics_base
+        includes: "*"
+
+      - join_path: mrr_metrics_base.users_base
+        prefix: true
+        includes: "*"
+
+      - join_path: mrr_metrics_base.user_profiles
+        prefix: true
+        includes: "*"
+
+      - join_path: mrr_metrics_base.user_last_properties
+        prefix: true
+        includes: "*"
+
+      - join_path: mrr_metrics_base.user_last_properties.market_mapping
+        prefix: true
+        includes: "*"
