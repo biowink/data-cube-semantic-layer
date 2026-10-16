@@ -1,0 +1,233 @@
+cubes:
+  - name: clue_plus_user_lifetimes
+    sql_table: der.clue_plus_user_lifetimes
+    title: Clue Plus User Lifetimes
+    description: >
+      Daily session activity and subscription access for users who have ever had
+      Clue Plus access. One row per user per day. 
+      Docs: https://biowink.atlassian.net/wiki/spaces/DATA/pages/3774316545
+
+    dimensions:
+      # ---------------------------------------------------------------- IDs
+      - name: user_date
+        sql: "{CUBE}.analytics_id || ',' || CAST({CUBE}.date AS VARCHAR)"
+        type: string
+        primary_key: true
+        public: true
+
+      - name: analytics_id
+        sql: "{CUBE}.analytics_id"
+        type: string
+        public: false
+
+      # -------------------------------------------------------------- Dates
+      # Source columns are DATE; cast to timestamp for Cube's time handling.
+      # date is the partition column: check that filters still prune (see notes).
+      - name: date
+        sql: "CAST({CUBE}.date AS TIMESTAMP)"
+        type: time
+
+      - name: account_created
+        sql: "CAST({CUBE}.account_created_dt AS TIMESTAMP)"
+        type: time
+
+      - name: is_last_day_of_month
+        sql: "COALESCE({CUBE}.date = last_day_of_month({CUBE}.date), false)"
+        type: boolean
+
+      # Looker dimension_group since_account_created (duration, datatype: date)
+      - name: account_age_days
+        sql: "DATE_DIFF('day', {CUBE}.account_created_dt, {CUBE}.date)"
+        type: number
+
+      - name: account_age_weeks
+        sql: "DATE_DIFF('week', {CUBE}.account_created_dt, {CUBE}.date)"
+        type: number
+
+      - name: account_age_months
+        sql: "DATE_DIFF('month', {CUBE}.account_created_dt, {CUBE}.date)"
+        type: number
+
+      - name: account_age_quarters
+        sql: "DATE_DIFF('quarter', {CUBE}.account_created_dt, {CUBE}.date)"
+        type: number
+
+      - name: account_age_years
+        sql: "DATE_DIFF('year', {CUBE}.account_created_dt, {CUBE}.date)"
+        type: number
+
+      # ------------------------------------------------------- User context
+      - name: country
+        sql: "{CUBE}.country_name"
+        type: string
+
+      - name: platform
+        sql: "{CUBE}.platform"
+        type: string
+
+      - name: app_version
+        sql: "{CUBE}.app_version"
+        type: string
+
+      - name: language
+        sql: "{CUBE}.language"
+        type: string
+
+      - name: mode
+        description: The mode (life stage) the user is on the day
+        sql: "{CUBE}.mode"
+        type: string
+
+      - name: mode_previous_day
+        description: The mode (life stage) the user was on the previous day
+        sql: "{CUBE}.mode_previous_day"
+        type: string
+
+      # ------------------------------------------------------- Subscription
+      - name: subscription_status
+        description: The subscription status of the user (free, subscribed_paid, subscribed_trial, subscribed_other)
+        sql: "{CUBE}.subscription_status"
+        type: string
+
+      - name: subscription_status_previous_day
+        description: The subscription status of the user on the previous day (free, subscribed_paid, subscribed_trial, subscribed_other)
+        sql: "{CUBE}.subscription_status_previous_day"
+        type: string
+
+      - name: subscription_duration
+        sql: "{CUBE}.subscription_duration"
+        type: number
+
+      - name: subscription_source
+        description: The source of a subscription (mobile, web, partner)
+        sql: "{CUBE}.subscription_source"
+        type: string
+
+      - name: subscription_source_with_partner
+        description: The source of a subscription event, augmented with partner information
+        sql: "COALESCE({CUBE}.partner, {CUBE}.subscription_source)"
+        type: string
+
+      - name: partner
+        sql: "{CUBE}.partner"
+        type: string
+
+      # ------------------------------------------------------------- Flags
+      - name: is_clue_plus
+        description: Whether the user had Clue Plus access
+        sql: "COALESCE({CUBE}.is_clue_plus, false)"
+        type: boolean
+
+      - name: is_paid_subscribed
+        description: Whether the user had Clue Plus access from a paid subscription
+        sql: "COALESCE({CUBE}.is_paid_subscribed, false)"
+        type: boolean
+
+      - name: lost_clue_plus
+        sql: |
+          COALESCE(
+            {CUBE}.subscription_status = 'free'
+            AND {CUBE}.subscription_status_previous_day != 'free',
+            false
+          )
+        type: boolean
+
+      - name: is_paid_churner
+        sql: |
+          COALESCE(
+            {CUBE}.subscription_status != 'subscribed_paid'
+            AND {CUBE}.subscription_status_previous_day = 'subscribed_paid',
+            false
+          )
+        type: boolean
+
+      # ----------------------------------------------------------- Activity
+      - name: is_dau
+        description: Whether a user is DAU (Daily Active), i.e. had at least one session
+        sql: "COALESCE({CUBE}.is_dau, false)"
+        type: boolean
+
+      - name: is_wau
+        description: Whether a user is WAU (Weekly Active), i.e. had a session in the past 7 days
+        sql: "COALESCE({CUBE}.is_wau, false)"
+        type: boolean
+
+      - name: is_mau
+        description: Whether a user is MAU (Monthly Active), i.e. had a session in the past 30 days
+        sql: "COALESCE({CUBE}.is_mau, false)"
+        type: boolean
+
+      - name: count_sessions
+        sql: "{CUBE}.count_sessions"
+        type: number
+
+    measures:
+      # ------------------------------------------------------------- Users
+      - name: count_users
+        sql: "{CUBE}.analytics_id"
+        type: count_distinct
+
+      - name: count_dau
+        description: Count of users who are Daily Active
+        sql: "{CUBE}.analytics_id"
+        type: count_distinct
+        filters:
+          - sql: "{CUBE}.is_dau"
+
+      - name: count_wau
+        description: Count of users who are Weekly Active
+        sql: "{CUBE}.analytics_id"
+        type: count_distinct
+        filters:
+          - sql: "{CUBE}.is_wau"
+
+      - name: count_mau
+        description: Count of users who are Monthly Active
+        sql: "{CUBE}.analytics_id"
+        type: count_distinct
+        filters:
+          - sql: "{CUBE}.is_mau"
+
+      # ------------------------------------------------------------- Rates
+      - name: dau_rate
+        description: The share of users who are Daily Active
+        sql: "CASE WHEN {CUBE}.is_dau THEN 1.0 ELSE 0 END"
+        type: avg
+        format: percent
+
+      - name: wau_rate
+        description: The share of users who are Weekly Active
+        sql: "CASE WHEN {CUBE}.is_wau THEN 1.0 ELSE 0 END"
+        type: avg
+        format: percent
+
+      - name: mau_rate
+        description: The share of users who are Monthly Active
+        sql: "CASE WHEN {CUBE}.is_mau THEN 1.0 ELSE 0 END"
+        type: avg
+        format: percent
+
+      - name: dau_mau_rate
+        description: The share of Monthly Active Users who are Daily Active
+        sql: "CASE WHEN {CUBE}.is_dau THEN 1.0 WHEN {CUBE}.is_mau THEN 0 END"
+        type: avg
+        format: percent
+
+      # ---------------------------------------------------------- Sessions
+      - name: total_sessions
+        sql: "{CUBE}.count_sessions"
+        type: sum
+
+      - name: total_active_days
+        sql: "CASE WHEN {CUBE}.is_dau THEN 1 ELSE 0 END"
+        type: sum
+
+      - name: total_session_length
+        description: The total length of user sessions, in seconds
+        sql: "{CUBE}.sum_session_length_sec"
+        type: sum
+
+      - name: average_session_length
+        description: The average length of user sessions, in seconds
+        sql: "CAST({total_session_length} AS DOUBLE) / NULLIF({total_sessions}, 0)"
+        type: number
