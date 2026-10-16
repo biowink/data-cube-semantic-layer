@@ -1,0 +1,21 @@
+cubes:
+  - name: user_account_source
+    sql_table: user_metrics.user_account_source
+    title: User Account Source
+    description: Where each user created their account.
+    public: false
+
+    dimensions:
+      - name: analytics_id
+        sql: "{CUBE}.analytics_id"
+        type: string
+        primary_key: true
+        public: false
+
+      - name: account_source
+        description: Where the user created their account (app or web)
+        sql: |
+          CASE WHEN {CUBE}.account_source IN ('Android', 'iOS') THEN 'App'
+               ELSE COALESCE({CUBE}.account_source, 'web')
+          END
+        type: string
