@@ -1,0 +1,102 @@
+cubes:
+  - name: reddit_campaign_performance
+    sql_table: der.reddit_campaign_performance
+    description: "Migrated from views/adjust/reddit_campaign_performance.view.lkml"
+
+    # The source LookML view defines no primary key, so none is set here either.
+    # Add one before joining other cubes to this cube.
+
+    dimensions:
+      - name: campaign
+        sql: campaign_name
+        type: string
+
+      - name: ad_group
+        sql: ad_group
+        type: string
+
+      - name: ad
+        sql: ad_name
+        type: string
+
+      - name: country_code
+        sql: "{CUBE}.country"
+        type: string
+
+      # dimension_group: date (date, week, month, year) - all native Cube granularities
+      - name: date
+        sql: "{CUBE}.\"date\""
+        type: time
+
+    measures:
+      # Reddit reports spend in micros (millionths of the currency unit)
+      - name: spend
+        sql: "{CUBE}.spend / 1000000.0"
+        type: sum
+        meta:
+          format: eur
+
+      - name: impressions
+        sql: impressions
+        type: sum
+
+      - name: reach
+        sql: reach
+        type: sum
+
+      - name: frequency
+        sql: "1.0 * {impressions} / NULLIF({reach}, 0)"
+        type: number
+        meta:
+          format: decimal_2
+
+      - name: clicks
+        sql: clicks
+        type: sum
+
+      - name: click_through_rate
+        sql: "1.0 * {clicks} / NULLIF({impressions}, 0)"
+        type: number
+        meta:
+          format: percent_2
+
+      - name: cost_per_click
+        sql: "1.0 * {spend} / NULLIF({clicks}, 0)"
+        type: number
+        meta:
+          format: eur
+
+      - name: video_viewable_impressions
+        sql: video_viewable_impressions
+        type: sum
+
+      - name: video_fully_viewable_impressions
+        sql: video_fully_viewable_impressions
+        type: sum
+
+      - name: video_plays_expanded
+        sql: video_plays_expanded
+        type: sum
+
+      - name: video_plays_with_sound
+        sql: video_plays_with_sound
+        type: sum
+
+      - name: video_started
+        sql: video_started
+        type: sum
+
+      - name: video_watched_3_seconds
+        sql: video_watched_3_seconds
+        type: sum
+
+      - name: video_watched_100_percent
+        sql: video_watched_100_percent
+        type: sum
+
+      - name: video_completion_rate
+        description: "Videos watched to 100% / Video Viewable Impressions"
+        sql: "1.0 * {video_watched_100_percent} / NULLIF({video_viewable_impressions}, 0)"
+        type: number
+        meta:
+          format: percent_2

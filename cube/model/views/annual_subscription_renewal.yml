@@ -1,0 +1,36 @@
+views:
+  - name: annual_subscription_renewal
+    title: "Annual Subscription Renewal"
+    description: "Explore that contains data about all 12M subscriptions up for renewal. Equivalent of the annual_subscription_renewal explore in models/app_usage.model.lkml"
+
+    # Joined cubes are prefixed with their cube name: several of them share member
+    # names (e.g. country/market on user_last_properties and market_mapping), which
+    # Looker kept apart by view name.
+    cubes:
+      - join_path: annual_subscription_renewal_base
+        includes: "*"
+
+      # view_label: "Users"
+      - join_path: annual_subscription_renewal_base.users_base
+        alias: users
+        prefix: true
+        includes: "*"
+        excludes:
+          - analytics_id
+
+      - join_path: annual_subscription_renewal_base.user_last_properties
+        prefix: true
+        includes: "*"
+        excludes:
+          - analytics_id
+
+      # TODO: add user_last_optional_consent_status and braze_global_control_group
+      # (view_label: "Users") once their cubes and joins exist
+
+      # view_label: "Market & Region"
+      - join_path: annual_subscription_renewal_base.user_last_properties.market_mapping
+        prefix: true
+        includes:
+          - country
+          - market
+          - region

@@ -27,7 +27,7 @@ cubes:
         type: time
 
       - name: last_session_day_of_week
-        sql: "date_format({CUBE}.session_ts, '%A')"
+        sql: "date_format({CUBE}.session_ts, '%W')"
         type: string
 
       - name: last_session_day_of_year

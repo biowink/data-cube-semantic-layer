@@ -1,0 +1,35 @@
+views:
+  - name: mobile_content_attribution
+    title: "Mobile Content Attribution"
+    description: "This explore shows all subscriptions attributed to mobile content and which article led to the conversion. Equivalent of the mobile_content_attribution explore in models/app_usage.model.lkml"
+
+    # Joined cubes are prefixed with their cube name: several share member names
+    # (platform/language here and on user_last_properties, country/market on
+    # user_last_properties and market_mapping), which Looker kept apart by view name.
+    cubes:
+      - join_path: mobile_content_attribution_base
+        includes: "*"
+        excludes:
+          - pk
+
+      # view_label: "Users"
+      - join_path: mobile_content_attribution_base.users_base
+        alias: users
+        prefix: true
+        includes: "*"
+        excludes:
+          - analytics_id
+
+      - join_path: mobile_content_attribution_base.user_last_properties
+        prefix: true
+        includes: "*"
+        excludes:
+          - analytics_id
+
+      # view_label: "Market & Region"
+      - join_path: mobile_content_attribution_base.user_last_properties.market_mapping
+        prefix: true
+        includes:
+          - country
+          - market
+          - region

@@ -1,0 +1,74 @@
+cubes:
+  - name: mobile_content_attribution_base
+    sql_table: der.mobile_content_attribution
+    description: "All subscriptions attributed to mobile content and which article led to the conversion. Migrated from views/app_usage/mobile_content_attribution.view.lkml"
+
+    # The source LookML view defines no primary key; Cube requires one on any cube
+    # with joins. subscription_count counts rows of this cube; the joins below are
+    # all many_to_one, so they can't inflate it.
+
+    # Mirrors the joins on the mobile_content_attribution explore in
+    # models/app_usage.model.lkml (market_mapping is joined via user_last_properties,
+    # see that cube).
+    joins:
+      - name: users_base
+        relationship: many_to_one
+        sql: "{CUBE}.analytics_id = {users_base.analytics_id}"
+
+      - name: user_last_properties
+        relationship: many_to_one
+        sql: "{CUBE}.analytics_id = {user_last_properties.analytics_id}"
+
+    dimensions:
+      # Grain: one row per attributed subscription, i.e. analytics_id + subscription start.
+      # COALESCE keeps the key non-NULL if any part is NULL.
+      - name: pk
+        sql: >
+          COALESCE({CUBE}.analytics_id, '') || '|' ||
+          COALESCE(CAST({CUBE}.subscription_started_derived_tstamp AS VARCHAR), '')
+        type: string
+        primary_key: true
+        public: false
+
+      - name: analytics_id
+        sql: analytics_id
+        type: string
+
+      - name: platform
+        sql: platform
+        type: string
+
+      - name: language
+        sql: language
+        type: string
+
+      # dimension_group: subscription_started (date, week, month, year) - all native Cube granularities
+      - name: subscription_started
+        sql: subscription_started_derived_tstamp
+        type: time
+
+      # dimension_group: attributed_content_view (date, week, month, year) - all native Cube granularities
+      - name: attributed_content_view
+        sql: attributed_content_derived_tstamp
+        type: time
+
+      - name: attributed_content_type
+        description: "whether the attributed content open was an article or a topic"
+        sql: attributed_content_type
+        type: string
+
+      - name: article_or_topic_category
+        sql: "COALESCE({CUBE}.article_category, {CUBE}.topic_name)"
+        type: string
+
+      - name: article_or_topic_title
+        sql: "COALESCE({CUBE}.article_title, {CUBE}.topic_name)"
+        type: string
+
+      - name: article_format
+        sql: article_format
+        type: string
+
+    measures:
+      - name: subscription_count
+        type: count
