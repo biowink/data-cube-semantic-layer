@@ -2,6 +2,7 @@ cubes:
   - name: annual_subscription_renewal_base
     sql_table: der.annual_subscription_renewal
     description: "All 12M subscriptions up for renewal. Migrated from views/app_usage/annual_subscription_renewal.view.lkml"
+    public: false
 
     # The source LookML view defines no primary key; Cube requires one on any cube
     # with joins. Grain is one row per purchase (renewal_rate divides by distinct

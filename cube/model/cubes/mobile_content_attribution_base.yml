@@ -2,6 +2,7 @@ cubes:
   - name: mobile_content_attribution_base
     sql_table: der.mobile_content_attribution
     description: "All subscriptions attributed to mobile content and which article led to the conversion. Migrated from views/app_usage/mobile_content_attribution.view.lkml"
+    public: false
 
     # The source LookML view defines no primary key; Cube requires one on any cube
     # with joins. subscription_count counts rows of this cube; the joins below are
