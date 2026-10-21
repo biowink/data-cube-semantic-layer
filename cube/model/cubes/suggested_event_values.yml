@@ -1,0 +1,390 @@
+# Shared refresh interval for every cube in this file, in place of the
+# LookML datagroup_trigger (nightly_datagroup). Change it here only.
+# Cron: Mondays at 03:00 (UTC, Cube's default when no timezone is set).
+{% set suggestions_refresh_every = "0 3 * * 1" %}
+
+cubes:
+  - name: suggested_event_properties
+    sql: >
+      WITH keys_data AS (
+        SELECT map_keys(CAST(json_parse(event_properties) AS map(varchar, json))) AS keys
+        FROM der.events
+        WHERE events.derived_tstamp >= CURRENT_DATE - INTERVAL '3' DAY
+      )
+      SELECT DISTINCT key
+      FROM keys_data
+      CROSS JOIN UNNEST (keys) AS t (key)
+    description: "Migrated from the suggested_event_properties LookML view"
+    public: false
+    refresh_key:
+      every: "{{ suggestions_refresh_every }}"
+
+    # Stored in Cube Store and rebuilt by the refresh worker on the same schedule,
+    # like the LookML PDT, so queries read the stored rows instead of der.events.
+    pre_aggregations:
+      - name: suggested_event_values
+        dimensions:
+          - event_property_name
+        refresh_key:
+          every: "{{ suggestions_refresh_every }}"
+
+    dimensions:
+      # The LookML declares mobile_event_name {} and event_property_name {} with no
+      # sql, which default to columns the derived table doesn't output (it only
+      # returns key). mobile_event_name is dropped; event_property_name maps to key.
+      # Not a primary key in the LookML; key is DISTINCT above, so it is one here.
+      - name: event_property_name
+        sql: "{CUBE}.key"
+        type: string
+        primary_key: true
+        public: true
+
+  - name: suggested_mobile_event_names
+    sql: >
+      SELECT mobile_event_name
+      FROM der.events
+      WHERE derived_tstamp >= CURRENT_DATE - INTERVAL '3' DAY
+      GROUP BY 1
+    description: "Migrated from the suggested_mobile_event_names LookML view"
+    public: false
+    refresh_key:
+      every: "{{ suggestions_refresh_every }}"
+
+    # Stored in Cube Store and rebuilt by the refresh worker on the same schedule,
+    # like the LookML PDT, so queries read the stored rows instead of der.events.
+    pre_aggregations:
+      - name: suggested_event_values
+        dimensions:
+          - mobile_event_name
+        refresh_key:
+          every: "{{ suggestions_refresh_every }}"
+
+    dimensions:
+      # One row per mobile_event_name (GROUP BY above), so it is the primary key.
+      # Primary keys are hidden by default; keep it visible as in the LookML.
+      - name: mobile_event_name
+        sql: "{CUBE}.mobile_event_name"
+        type: string
+        primary_key: true
+        public: true
+
+  - name: suggested_countries
+    sql: >
+      SELECT country_name
+      FROM der.events
+      WHERE derived_tstamp >= CURRENT_DATE - INTERVAL '3' DAY
+      GROUP BY 1
+    description: "Migrated from the suggested_countries LookML view"
+    public: false
+    refresh_key:
+      every: "{{ suggestions_refresh_every }}"
+
+    # Stored in Cube Store and rebuilt by the refresh worker on the same schedule,
+    # like the LookML PDT, so queries read the stored rows instead of der.events.
+    pre_aggregations:
+      - name: suggested_event_values
+        dimensions:
+          - country_name
+        refresh_key:
+          every: "{{ suggestions_refresh_every }}"
+
+    dimensions:
+      # One row per country_name (GROUP BY above), so it is the primary key.
+      # Primary keys are hidden by default; keep it visible as in the LookML.
+      - name: country_name
+        sql: "{CUBE}.country_name"
+        type: string
+        primary_key: true
+        public: true
+
+  - name: suggested_languages
+    sql: >
+      SELECT language
+      FROM der.events
+      WHERE derived_tstamp >= CURRENT_DATE - INTERVAL '3' DAY
+      GROUP BY 1
+    description: "Migrated from the suggested_languages LookML view"
+    public: false
+    refresh_key:
+      every: "{{ suggestions_refresh_every }}"
+
+    # Stored in Cube Store and rebuilt by the refresh worker on the same schedule,
+    # like the LookML PDT, so queries read the stored rows instead of der.events.
+    pre_aggregations:
+      - name: suggested_event_values
+        dimensions:
+          - language
+        refresh_key:
+          every: "{{ suggestions_refresh_every }}"
+
+    dimensions:
+      # One row per language (GROUP BY above), so it is the primary key.
+      # Primary keys are hidden by default; keep it visible as in the LookML.
+      - name: language
+        sql: "{CUBE}.language"
+        type: string
+        primary_key: true
+        public: true
+
+  - name: suggested_platforms
+    sql: >
+      SELECT platform
+      FROM der.events
+      WHERE derived_tstamp >= CURRENT_DATE - INTERVAL '3' DAY
+      GROUP BY 1
+    description: "Migrated from the suggested_platforms LookML view"
+    public: false
+    refresh_key:
+      every: "{{ suggestions_refresh_every }}"
+
+    # Stored in Cube Store and rebuilt by the refresh worker on the same schedule,
+    # like the LookML PDT, so queries read the stored rows instead of der.events.
+    pre_aggregations:
+      - name: suggested_event_values
+        dimensions:
+          - platform
+        refresh_key:
+          every: "{{ suggestions_refresh_every }}"
+
+    dimensions:
+      # One row per platform (GROUP BY above), so it is the primary key.
+      # Primary keys are hidden by default; keep it visible as in the LookML.
+      - name: platform
+        sql: "{CUBE}.platform"
+        type: string
+        primary_key: true
+        public: true
+
+  - name: suggested_schema_names
+    sql: >
+      SELECT schema_name
+      FROM der.events
+      WHERE derived_tstamp >= CURRENT_DATE - INTERVAL '3' DAY
+      GROUP BY 1
+    description: "Migrated from the suggested_schema_names LookML view"
+    public: false
+    refresh_key:
+      every: "{{ suggestions_refresh_every }}"
+
+    # Stored in Cube Store and rebuilt by the refresh worker on the same schedule,
+    # like the LookML PDT, so queries read the stored rows instead of der.events.
+    pre_aggregations:
+      - name: suggested_event_values
+        dimensions:
+          - schema_name
+        refresh_key:
+          every: "{{ suggestions_refresh_every }}"
+
+    dimensions:
+      # One row per schema_name (GROUP BY above), so it is the primary key.
+      # Primary keys are hidden by default; keep it visible as in the LookML.
+      - name: schema_name
+        sql: "{CUBE}.schema_name"
+        type: string
+        primary_key: true
+        public: true
+
+  - name: suggested_navigation_contexts
+    sql: >
+      SELECT navigation_context
+      FROM der.events
+      WHERE derived_tstamp >= CURRENT_DATE - INTERVAL '3' DAY
+      GROUP BY 1
+    description: "Migrated from the suggested_navigation_contexts LookML view"
+    public: false
+    refresh_key:
+      every: "{{ suggestions_refresh_every }}"
+
+    # Stored in Cube Store and rebuilt by the refresh worker on the same schedule,
+    # like the LookML PDT, so queries read the stored rows instead of der.events.
+    pre_aggregations:
+      - name: suggested_event_values
+        dimensions:
+          - navigation_context
+        refresh_key:
+          every: "{{ suggestions_refresh_every }}"
+
+    dimensions:
+      # One row per navigation_context (GROUP BY above), so it is the primary key.
+      # Primary keys are hidden by default; keep it visible as in the LookML.
+      - name: navigation_context
+        sql: "{CUBE}.navigation_context"
+        type: string
+        primary_key: true
+        public: true
+
+  - name: suggested_product_tiers
+    sql: >
+      SELECT product_tier
+      FROM der.events
+      WHERE derived_tstamp >= CURRENT_DATE - INTERVAL '3' DAY
+      GROUP BY 1
+    description: "Migrated from the suggested_product_tiers LookML view"
+    public: false
+    refresh_key:
+      every: "{{ suggestions_refresh_every }}"
+
+    # Stored in Cube Store and rebuilt by the refresh worker on the same schedule,
+    # like the LookML PDT, so queries read the stored rows instead of der.events.
+    pre_aggregations:
+      - name: suggested_event_values
+        dimensions:
+          - product_tier
+        refresh_key:
+          every: "{{ suggestions_refresh_every }}"
+
+    dimensions:
+      # One row per product_tier (GROUP BY above), so it is the primary key.
+      # Primary keys are hidden by default; keep it visible as in the LookML.
+      - name: product_tier
+        sql: "{CUBE}.product_tier"
+        type: string
+        primary_key: true
+        public: true
+
+  - name: suggested_modes
+    sql: >
+      SELECT mode
+      FROM der.events
+      WHERE derived_tstamp >= CURRENT_DATE - INTERVAL '3' DAY
+      GROUP BY 1
+    description: "Migrated from the suggested_modes LookML view"
+    public: false
+    refresh_key:
+      every: "{{ suggestions_refresh_every }}"
+
+    # Stored in Cube Store and rebuilt by the refresh worker on the same schedule,
+    # like the LookML PDT, so queries read the stored rows instead of der.events.
+    pre_aggregations:
+      - name: suggested_event_values
+        dimensions:
+          - mode
+        refresh_key:
+          every: "{{ suggestions_refresh_every }}"
+
+    dimensions:
+      # One row per mode (GROUP BY above), so it is the primary key.
+      # Primary keys are hidden by default; keep it visible as in the LookML.
+      - name: mode
+        sql: "{CUBE}.mode"
+        type: string
+        primary_key: true
+        public: true
+
+  - name: suggested_article_categories
+    sql: >
+      SELECT JSON_EXTRACT_SCALAR(event_properties, '$["Article Category"]') AS article_category
+      FROM der.events
+      WHERE derived_tstamp >= CURRENT_DATE - INTERVAL '3' DAY AND mobile_event_name = 'Open Article'
+      GROUP BY 1
+    description: "Migrated from the suggested_article_categories LookML view"
+    public: false
+    refresh_key:
+      every: "{{ suggestions_refresh_every }}"
+
+    # Stored in Cube Store and rebuilt by the refresh worker on the same schedule,
+    # like the LookML PDT, so queries read the stored rows instead of der.events.
+    pre_aggregations:
+      - name: suggested_event_values
+        dimensions:
+          - article_category
+        refresh_key:
+          every: "{{ suggestions_refresh_every }}"
+
+    dimensions:
+      # One row per article_category (GROUP BY above), so it is the primary key.
+      # Primary keys are hidden by default; keep it visible as in the LookML.
+      - name: article_category
+        sql: "{CUBE}.article_category"
+        type: string
+        primary_key: true
+        public: true
+
+  - name: suggested_article_titles
+    sql: >
+      SELECT JSON_EXTRACT_SCALAR(event_properties, '$["Article Title"]') AS article_title
+      FROM der.events
+      WHERE derived_tstamp >= CURRENT_DATE - INTERVAL '3' DAY AND mobile_event_name = 'Open Article'
+      GROUP BY 1
+    description: "Migrated from the suggested_article_titles LookML view"
+    public: false
+    refresh_key:
+      every: "{{ suggestions_refresh_every }}"
+
+    # Stored in Cube Store and rebuilt by the refresh worker on the same schedule,
+    # like the LookML PDT, so queries read the stored rows instead of der.events.
+    pre_aggregations:
+      - name: suggested_event_values
+        dimensions:
+          - article_title
+        refresh_key:
+          every: "{{ suggestions_refresh_every }}"
+
+    dimensions:
+      # One row per article_title (GROUP BY above), so it is the primary key.
+      # Primary keys are hidden by default; keep it visible as in the LookML.
+      - name: article_title
+        sql: "{CUBE}.article_title"
+        type: string
+        primary_key: true
+        public: true
+
+  - name: suggested_topic_names
+    sql: >
+      SELECT JSON_EXTRACT_SCALAR(event_properties, '$["Topic Name"]') AS topic_name
+      FROM der.events
+      WHERE derived_tstamp >= CURRENT_DATE - INTERVAL '3' DAY AND mobile_event_name = 'Open Topic'
+      GROUP BY 1
+    description: "Migrated from the suggested_topic_names LookML view"
+    public: false
+    refresh_key:
+      every: "{{ suggestions_refresh_every }}"
+
+    # Stored in Cube Store and rebuilt by the refresh worker on the same schedule,
+    # like the LookML PDT, so queries read the stored rows instead of der.events.
+    pre_aggregations:
+      - name: suggested_event_values
+        dimensions:
+          - topic_name
+        refresh_key:
+          every: "{{ suggestions_refresh_every }}"
+
+    dimensions:
+      # One row per topic_name (GROUP BY above), so it is the primary key.
+      # Primary keys are hidden by default; keep it visible as in the LookML.
+      - name: topic_name
+        sql: "{CUBE}.topic_name"
+        type: string
+        primary_key: true
+        public: true
+
+  - name: suggested_meta_ids
+    sql: >
+      SELECT JSON_EXTRACT_SCALAR(event_properties, '$["Meta ID"]') AS meta_id
+      FROM der.events
+      WHERE derived_tstamp >= CURRENT_DATE - INTERVAL '3' DAY AND mobile_event_name = 'Open Topic'
+      GROUP BY 1
+    description: "Migrated from the suggested_meta_ids LookML view"
+    public: false
+    refresh_key:
+      every: "{{ suggestions_refresh_every }}"
+
+    # Stored in Cube Store and rebuilt by the refresh worker on the same schedule,
+    # like the LookML PDT, so queries read the stored rows instead of der.events.
+    pre_aggregations:
+      - name: suggested_event_values
+        dimensions:
+          - meta_id
+        refresh_key:
+          every: "{{ suggestions_refresh_every }}"
+
+    dimensions:
+      # Named topic_name in the LookML (copy-paste from suggested_topic_names);
+      # renamed to meta_id to match the column it selects.
+      # One row per meta_id (GROUP BY above), so it is the primary key.
+      # Primary keys are hidden by default; keep it visible as in the LookML.
+      - name: meta_id
+        sql: "{CUBE}.meta_id"
+        type: string
+        primary_key: true
+        public: true
