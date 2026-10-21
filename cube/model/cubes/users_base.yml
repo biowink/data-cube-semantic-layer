@@ -5,8 +5,8 @@ cubes:
     public: false
 
     #todo: From the LookML users explore. Joins to views not yet migrated to cubes
-    # (braze_global_control_group, user_account_source,
-    # user_device_connections, dynamic_user_fields) are left out for now.
+    # (user_account_source, user_device_connections, dynamic_user_fields)
+    # are left out for now.
     # market_mapping and apple_device_mapping join via user_last_properties.
     joins:
       - name: user_last_properties
@@ -37,9 +37,16 @@ cubes:
         relationship: one_to_one
         sql: "{CUBE}.analytics_id = {user_goal_attributes.analytics_id}"
 
+      # The LookML sql_on also requires user_last_properties /
+      # user_last_optional_consent_status to have a row for the same analytics_id
+      # (the users condition is implied, users is this cube). Cube join SQL can't
+      # reference other cubes, so those checks are EXISTS on their tables.
       - name: braze_global_control_group
         relationship: one_to_one
-        sql: "{CUBE}.analytics_id = {braze_global_control_group.analytics_id}"
+        sql: >
+          {CUBE}.analytics_id = {braze_global_control_group.analytics_id}
+          AND EXISTS (SELECT 1 FROM user_metrics.user_last_session_attributes p WHERE p.analytics_id = {CUBE}.analytics_id)
+          AND EXISTS (SELECT 1 FROM user_metrics.user_last_optional_consent_status c WHERE c.analytics_id = {CUBE}.analytics_id)
 
       - name: user_first_properties
         relationship: one_to_one

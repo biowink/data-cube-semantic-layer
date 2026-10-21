@@ -1,0 +1,196 @@
+cubes:
+  - name: monthly_active_user_analytics
+    sql_table: rep.monthly_active_user_growth
+    description: "Historical and cohort analysis of monthly active user growth and other user activity metrics, based on registered user accounts. Migrated from views/app_usage/monthly_active_user_analytics.view.lkml"
+
+    # The source LookML view defines no primary key, so none is set here either.
+    # Add one before joining this cube to others.
+
+    dimensions:
+      # type: date_month in LookML -> time dimension; query it at month granularity
+      - name: month
+        sql: "{CUBE}.month"
+        type: time
+
+      - name: account_created_month
+        sql: account_created_month
+        type: time
+
+      - name: months_into_lifecycle
+        description: "The number of months since the user created their account"
+        sql: "DATE_DIFF('month', {CUBE}.account_created_month, {CUBE}.month)"
+        type: number
+
+      - name: platform
+        sql: "COALESCE({CUBE}.platform, 'platform data missing')"
+        type: string
+
+      - name: country
+        sql: "COALESCE({CUBE}.country_name, 'country data missing')"
+        type: string
+
+      - name: source_type
+        sql: "COALESCE({CUBE}.source_type, 'attribution data missing')"
+        type: string
+
+      - name: market
+        sql: >
+          CASE
+            WHEN {country} = 'United States' THEN 'US'
+            WHEN {country} IN (
+              'Austria', 'Belgium', 'Denmark', 'France',
+              'Germany', 'Ireland', 'Luxembourg', 'Netherlands',
+              'Norway', 'Sweden', 'Switzerland', 'United Kingdom', 'Italy',
+              'Spain', 'Australia', 'Canada', 'Japan', 'New Zealand'
+            ) THEN 'Non-US Strategic'
+            ELSE 'Rest of World'
+          END
+        type: string
+
+      # parameter: user_segmentation_selector / dimension: dynamic_user_segmentation
+      # dropped: they let a Looker user pick which dimension to group by. A Cube
+      # client picks platform / market / source_type / country per query instead.
+
+    measures:
+      - name: user_cohort_size
+        sql: cohort_size
+        type: sum
+
+      - name: days_in_month
+        sql: "DATE_DIFF('day', {CUBE}.month, DATE_ADD('month', 1, {CUBE}.month))"
+        type: max
+        public: false
+
+      - name: previous_month_mau
+        title: "Starting MAU"
+        description: "The count of MAU coming from the previous month"
+        sql: previous_month_mau
+        type: sum
+
+      - name: retained_mau
+        title: "Retained MAU"
+        description: "MAU who were also MAU from the previous month"
+        sql: retained_mau
+        type: sum
+
+      - name: new_mau
+        title: "New MAU"
+        description: "MAU from new accounts created in the month"
+        sql: new_mau
+        type: sum
+
+      - name: reactivated_mau
+        title: "Reactivated MAU"
+        description: "MAU who were not MAU the previous month and also are not new accounts"
+        sql: reactivated_mau
+        type: sum
+
+      - name: churned_mau
+        title: "Churned MAU"
+        description: "Users who were MAU the previous month but not the following month"
+        sql: "{CUBE}.churned_mau * -1"
+        type: sum
+
+      - name: net_mau
+        title: "Net MAU"
+        description: "The count of MAU in the month"
+        sql: net_mau
+        type: sum
+
+      - name: subscription_starting_user_count
+        description: "The count of users starting a subscription in the month"
+        sql: count_subscription_started_users
+        type: sum
+
+      - name: buy_screen_viewing_user_count
+        description: "The count of users seeing at least one buy screen in the month"
+        sql: count_view_subscription_plans_users
+        type: sum
+
+      - name: total_active_days
+        description: "The total count of days users were active in the month"
+        sql: total_days_active
+        type: sum
+
+      - name: total_buy_screen_views
+        description: "The total count of buy screen views in the month"
+        sql: total_view_subscription_plans
+        type: sum
+
+      - name: mom_mau_retention_rate
+        title: "MoM MAU Retention Rate"
+        description: "The percentage of users who were MAU in the preceding calendar month who were active again the following month"
+        sql: "CAST({retained_mau} AS DOUBLE) / {previous_month_mau}"
+        type: number
+        meta:
+          format: percent_1
+
+      - name: mom_mau_gross_churn_rate
+        title: "MoM Gross MAU Churn Rate"
+        description: "The percentage of users who were MAU in the preceding calendar month who churned (i.e. were not active again) the following month"
+        sql: "CAST({churned_mau} AS DOUBLE) / {previous_month_mau} * -1"
+        type: number
+        meta:
+          format: percent_1
+
+      - name: mom_mau_net_churn_rate
+        title: "MoM Net MAU Churn Rate"
+        description: "The percentage of users who were MAU in the preceding calendar month who churned (i.e. were not active again) the following month, adjusted for reactivating users"
+        sql: "CAST(({churned_mau} + {reactivated_mau}) AS DOUBLE) / {previous_month_mau} * -1"
+        type: number
+        meta:
+          format: percent_1
+
+      - name: mau_growth_rate
+        title: "MAU Growth Rate"
+        description: "The month-over-month MAU growth rate"
+        sql: "CAST({net_mau} AS DOUBLE) / {previous_month_mau} - 1"
+        type: number
+        meta:
+          format: percent_1
+
+      - name: mau_quick_ratio
+        title: "MAU Quick Ratio"
+        description: "The ratio of MAU inflows (new users and reactivations) to MAU outflow (churners)"
+        sql: "CAST(({reactivated_mau} + {new_mau}) AS DOUBLE) / ({churned_mau} * -1)"
+        type: number
+        meta:
+          format: decimal_2
+
+      - name: cohort_mau_retention_rate
+        title: "Cohort MAU Retention Rate"
+        description: "The percentage of users from the original user cohort still active in the month"
+        sql: "CAST({net_mau} AS DOUBLE) / {user_cohort_size}"
+        type: number
+        meta:
+          format: percent_1
+
+      - name: dau_mau
+        title: "DAU/MAU"
+        description: "The average number of MAU active on a day in the month, or average number of days a MAU was active in the month"
+        sql: "CAST({total_active_days} AS DOUBLE) / ({net_mau} * {days_in_month})"
+        type: number
+        meta:
+          format: percent_1
+
+      - name: subscription_start_mau_rate
+        title: "Subscription Starting MAU Rate"
+        description: "The percentage of MAU starting a subscription in the month"
+        sql: "CAST({subscription_starting_user_count} AS DOUBLE) / {net_mau}"
+        type: number
+        meta:
+          format: percent_2
+
+      - name: buy_screen_view_mau_rate
+        title: "Buy Screen Viewing MAU Rate"
+        description: "The percentage of MAU seeing at least one buy screen in the month"
+        sql: "CAST({buy_screen_viewing_user_count} AS DOUBLE) / {net_mau}"
+        type: number
+        meta:
+          format: percent_1
+
+      # todo: dynamic measures are not copied over to the cube.
+      # parameter: month_metric_selector / measure: dynamic_cohort_metric dropped:
+      # they let a Looker user pick which rate to show. A Cube client requests
+      # cohort_mau_retention_rate / dau_mau / buy_screen_view_mau_rate /
+      # subscription_start_mau_rate directly instead.

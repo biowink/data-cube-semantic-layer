@@ -1,0 +1,110 @@
+cubes:
+  - name: consumable_transactions_base
+    sql_table: der.consumable_transactions
+    description: "Migrated from views/sales/consumable_transactions.view.lkml"
+    public: false
+
+    # Mirrors the joins on the consumable_transactions explore in
+    # models/sales.model.lkml. users is also needed by the duration dimensions below.
+    #todo: Note that the LookML joins are type: full_outer; Cube only generates LEFT JOINs, so
+    # users / profiles without any consumable transaction are not returned here.
+    joins:
+      - name: users_base
+        relationship: many_to_one
+        sql: "{CUBE}.analytics_id = {users_base.analytics_id}"
+
+      - name: user_profiles
+        relationship: many_to_one
+        sql: "{CUBE}.analytics_id = {user_profiles.analytics_id}"
+
+    dimensions:
+      - name: transaction_id
+        sql: transaction_id
+        type: string
+        primary_key: true
+
+      - name: analytics_id
+        sql: analytics_id
+        type: string
+
+      # dimension_group: purchase (raw/date/week/month/quarter/year) -> one time
+      # dimension; Cube derives those granularities at query time
+      - name: purchase_date
+        sql: purchase_date
+        type: time
+
+      - name: country_name
+        sql: country_name
+        type: string
+
+      - name: customer_currency
+        sql: customer_currency
+        type: string
+
+      - name: customer_price
+        sql: customer_price
+        type: number
+
+      - name: platform
+        sql: platform
+        type: string
+
+      - name: product_id
+        sql: product_id
+        type: string
+
+      # dimension_group: since_account_created (type: duration, datatype: date,
+      # intervals: day/week/month/quarter/year) -> one number dimension per interval,
+      # counting complete intervals between the two dates
+      - name: days_since_account_created
+        sql: "DATE_DIFF('day', DATE({users_base.account_created_date}), DATE({CUBE}.purchase_date))"
+        type: number
+
+      - name: weeks_since_account_created
+        sql: "DATE_DIFF('week', DATE({users_base.account_created_date}), DATE({CUBE}.purchase_date))"
+        type: number
+
+      - name: months_since_account_created
+        sql: "DATE_DIFF('month', DATE({users_base.account_created_date}), DATE({CUBE}.purchase_date))"
+        type: number
+
+      - name: quarters_since_account_created
+        sql: "DATE_DIFF('quarter', DATE({users_base.account_created_date}), DATE({CUBE}.purchase_date))"
+        type: number
+
+      - name: years_since_account_created
+        sql: "DATE_DIFF('year', DATE({users_base.account_created_date}), DATE({CUBE}.purchase_date))"
+        type: number
+
+    measures:
+      - name: gross_sales_euro
+        sql: gross_sales_euro
+        type: sum
+        meta:
+          format: eur
+
+      - name: sales_without_tax_euro
+        sql: sales_without_tax_euro
+        type: sum
+        meta:
+          format: eur
+
+      - name: net_sales_euro
+        sql: net_sales_euro
+        type: sum
+        meta:
+          format: eur
+
+      - name: user_count
+        sql: analytics_id
+        type: count_distinct
+
+      - name: purchase_count
+        sql: transaction_id
+        type: count_distinct
+
+      - name: average_gross_price_eur
+        sql: gross_sales_euro
+        type: avg
+        meta:
+          format: eur

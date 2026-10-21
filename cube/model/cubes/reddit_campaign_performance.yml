@@ -33,8 +33,6 @@ cubes:
       - name: spend
         sql: "{CUBE}.spend / 1000000.0"
         type: sum
-        meta:
-          format: eur
 
       - name: impressions
         sql: impressions
@@ -47,8 +45,6 @@ cubes:
       - name: frequency
         sql: "1.0 * {impressions} / NULLIF({reach}, 0)"
         type: number
-        meta:
-          format: decimal_2
 
       - name: clicks
         sql: clicks
@@ -57,14 +53,10 @@ cubes:
       - name: click_through_rate
         sql: "1.0 * {clicks} / NULLIF({impressions}, 0)"
         type: number
-        meta:
-          format: percent_2
 
       - name: cost_per_click
         sql: "1.0 * {spend} / NULLIF({clicks}, 0)"
         type: number
-        meta:
-          format: eur
 
       - name: video_viewable_impressions
         sql: video_viewable_impressions
@@ -98,5 +90,3 @@ cubes:
         description: "Videos watched to 100% / Video Viewable Impressions"
         sql: "1.0 * {video_watched_100_percent} / NULLIF({video_viewable_impressions}, 0)"
         type: number
-        meta:
-          format: percent_2

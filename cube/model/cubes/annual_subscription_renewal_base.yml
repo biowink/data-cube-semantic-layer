@@ -4,13 +4,13 @@ cubes:
     description: "All 12M subscriptions up for renewal. Migrated from views/app_usage/annual_subscription_renewal.view.lkml"
     public: false
 
-    # The source LookML view defines no primary key; Cube requires one on any cube
-    # with joins. Grain is one row per purchase (renewal_rate divides by distinct
-    # purchases), so purchase_transaction_id is the key.
+    # The source LookML view defines no primary key; pk below is the
+    # subscription_id + purchase_transaction_id combination.
+    # All measures are count_distinct, so the many_to_one joins below can't inflate them.
 
     # Mirrors the joins on the annual_subscription_renewal explore in
     # models/app_usage.model.lkml (market_mapping is joined via user_last_properties,
-    # see that cube). users_base is also needed by the duration dimensions below.
+    # see that cube). users is also needed by the duration dimensions below.
     joins:
       - name: users_base
         relationship: many_to_one
@@ -20,11 +20,21 @@ cubes:
         relationship: many_to_one
         sql: "{CUBE}.analytics_id = {user_last_properties.analytics_id}"
 
-      # TODO: add these joins from the explore once their cubes exist:
-      #   - user_last_optional_consent_status (one_to_one on analytics_id)
-      #   - braze_global_control_group (one_to_one on analytics_id; the LookML sql_on
-      #     also requires users / user_last_properties / user_last_optional_consent_status
-      #     to match the same analytics_id)
+      - name: user_last_optional_consent_status
+        relationship: many_to_one
+        sql: "{CUBE}.analytics_id = {user_last_optional_consent_status.analytics_id}"
+
+      # The LookML sql_on also requires users / user_last_properties /
+      # user_last_optional_consent_status to have a row for the same analytics_id,
+      # so a control-group row only matches when all three exist. Cube join SQL
+      # can't reference other cubes, so those checks are EXISTS on their tables.
+      - name: braze_global_control_group
+        relationship: many_to_one
+        sql: >
+          {CUBE}.analytics_id = {braze_global_control_group.analytics_id}
+          AND EXISTS (SELECT 1 FROM core.clue_users u WHERE u.analytics_id = {CUBE}.analytics_id)
+          AND EXISTS (SELECT 1 FROM user_metrics.user_last_session_attributes p WHERE p.analytics_id = {CUBE}.analytics_id)
+          AND EXISTS (SELECT 1 FROM user_metrics.user_last_optional_consent_status c WHERE c.analytics_id = {CUBE}.analytics_id)
 
     dimensions:
       - name: analytics_id

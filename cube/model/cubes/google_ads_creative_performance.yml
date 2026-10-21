@@ -40,32 +40,22 @@ cubes:
       - name: image_asset_id
         sql: image_asset_id
         type: string
-        meta:
-          group_label: "Asset IDs and Names"
 
       - name: image_asset_name
         sql: image_asset_name
         type: string
-        meta:
-          group_label: "Asset IDs and Names"
 
       - name: text_asset_text
         sql: text_asset_text
         type: string
-        meta:
-          group_label: "Asset IDs and Names"
 
       - name: video_asset_id
         sql: video_asset_id
         type: string
-        meta:
-          group_label: "Asset IDs and Names"
 
       - name: video_asset_name
         sql: video_asset_name
         type: string
-        meta:
-          group_label: "Asset IDs and Names"
 
       - name: asset_name
         sql: "COALESCE({CUBE}.text_asset_text, {CUBE}.video_asset_name, {CUBE}.image_asset_name)"
@@ -79,38 +69,26 @@ cubes:
       - name: total_cost
         sql: cost
         type: sum
-        meta:
-          format: eur
 
       - name: total_impressions
         sql: impressions
         type: sum
-        meta:
-          format: decimal_0
 
       - name: total_clicks
         sql: clicks
         type: sum
-        meta:
-          format: decimal_0
 
       - name: total_conversions
         sql: conversions
         type: sum
-        meta:
-          format: decimal_2
 
       - name: total_view_through_conversions
         sql: view_through_conversions
         type: sum
-        meta:
-          format: decimal_0
 
       - name: total_video_trueview_views
         sql: video_trueview_views
         type: sum
-        meta:
-          format: decimal_0
 
       # Calculated measures (rates & performance)
       - name: click_through_rate
@@ -118,35 +96,25 @@ cubes:
         description: "Clicks / Impressions"
         sql: "CASE WHEN {total_impressions} > 0 THEN CAST({total_clicks} AS DOUBLE) / {total_impressions} ELSE 0 END"
         type: number
-        meta:
-          format: percent_2
 
       - name: cost_per_thousand_impressions
         title: "CPM"
         description: "Cost per 1000 Impressions"
         sql: "CASE WHEN {total_impressions} > 0 THEN 1000 * {total_cost} / {total_impressions} ELSE 0 END"
         type: number
-        meta:
-          format: eur
 
       - name: cost_per_click
         title: "CPC"
         description: "Cost per Click"
         sql: "CASE WHEN {total_clicks} > 0 THEN {total_cost} / {total_clicks} ELSE 0 END"
         type: number
-        meta:
-          format: eur
 
       - name: cost_per_conversion
         title: "Cost per Conversion"
         description: "Cost per Conversion"
         sql: "CASE WHEN {total_conversions} > 0 THEN {total_cost} / {total_conversions} ELSE 0 END"
         type: number
-        meta:
-          format: eur
 
       - name: video_trueview_view_rate
         sql: "CASE WHEN {total_impressions} > 0 THEN CAST({total_video_trueview_views} AS DOUBLE) / {total_impressions} ELSE 0 END"
         type: number
-        meta:
-          format: percent_2

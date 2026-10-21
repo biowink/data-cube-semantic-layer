@@ -1,0 +1,131 @@
+cubes:
+  - name: subscriber_activity_retention_base
+    sql_table: der.subscriber_activity_retention
+    description: "How many months 12m subscribers were active after subscribing. Migrated from views/app_usage/subscriber_activity_retention.view.lkml"
+    public: false
+
+    # Mirrors the joins on the subscriber_activity_retention explore in
+    # models/app_usage.model.lkml (market_mapping is joined via user_last_properties,
+    # see that cube). users is also needed by the duration dimensions below.
+    # The LookML declares these joins one_to_one, but this table has one row per
+    # user per lifecycle month, so they are many_to_one here.
+    joins:
+      - name: users_base
+        relationship: many_to_one
+        sql: "{CUBE}.analytics_id = {users_base.analytics_id}"
+
+      - name: user_last_properties
+        relationship: many_to_one
+        sql: "{CUBE}.analytics_id = {user_last_properties.analytics_id}"
+
+      - name: user_last_optional_consent_status
+        relationship: many_to_one
+        sql: "{CUBE}.analytics_id = {user_last_optional_consent_status.analytics_id}"
+
+      # The LookML sql_on also requires users / user_last_properties /
+      # user_last_optional_consent_status to have a row for the same analytics_id,
+      # so a control-group row only matches when all three exist. Cube join SQL
+      # can't reference other cubes, so those checks are EXISTS on their tables.
+      - name: braze_global_control_group
+        relationship: many_to_one
+        sql: >
+          {CUBE}.analytics_id = {braze_global_control_group.analytics_id}
+          AND EXISTS (SELECT 1 FROM core.clue_users u WHERE u.analytics_id = {CUBE}.analytics_id)
+          AND EXISTS (SELECT 1 FROM user_metrics.user_last_session_attributes p WHERE p.analytics_id = {CUBE}.analytics_id)
+          AND EXISTS (SELECT 1 FROM user_metrics.user_last_optional_consent_status c WHERE c.analytics_id = {CUBE}.analytics_id)
+
+    dimensions:
+      # Not in the source LookML. Cube needs a primary key on a cube with joins.
+      # The table is built in data-airflow (create_subscriber_activity_retention.sql)
+      # with GROUP BY analytics_id, user_first_converted_at, months_into_lifecycle,
+      # and user_first_converted_at is fixed per user.
+      - name: id
+        sql: "CONCAT({CUBE}.analytics_id, '|', CAST({CUBE}.months_into_lifecycle AS VARCHAR))"
+        type: string
+        primary_key: true
+        public: false
+
+      - name: analytics_id
+        sql: analytics_id
+        type: string
+
+      # dimension_group: user_first_converted_at -> base time dim (date/week/month/quarter/year)
+      # + the timeframes Cube can't derive at query time (day_of_month/day_of_year/month_num/month_name)
+      - name: user_first_converted_at
+        sql: user_first_converted_at
+        type: time
+
+      - name: user_first_converted_at_day_of_month
+        sql: "day({CUBE}.user_first_converted_at)"
+        type: number
+
+      - name: user_first_converted_at_day_of_year
+        sql: "day_of_year({CUBE}.user_first_converted_at)"
+        type: number
+
+      - name: user_first_converted_at_month_num
+        sql: "month({CUBE}.user_first_converted_at)"
+        type: number
+
+      - name: user_first_converted_at_month_name
+        sql: "date_format({CUBE}.user_first_converted_at, '%M')"
+        type: string
+
+      - name: months_into_lifecycle
+        sql: months_into_lifecycle
+        type: number
+
+      - name: count_sessions
+        sql: count_sessions
+        type: number
+
+      - name: count_active_days
+        sql: count_active_days
+        type: number
+
+      # todo: count_tracking_days is not written by create_subscriber_activity_retention.sql
+      - name: count_tracking_days
+        sql: count_tracking_days
+        type: number
+
+      - name: retained
+        sql: "CASE WHEN {CUBE}.count_active_days > 0 THEN TRUE ELSE FALSE END"
+        type: boolean
+
+      - name: tracked
+        sql: "CASE WHEN {CUBE}.count_tracking_days > 0 THEN TRUE ELSE FALSE END"
+        type: boolean
+
+      # dimension_group: between_account_created_and_subscription_conversion
+      # (type: duration, datatype: date, intervals: day/week/month) -> one number
+      # dimension per interval, counting complete intervals between the two dates
+      - name: days_between_account_created_and_subscription_conversion
+        sql: "DATE_DIFF('day', DATE({users_base.account_created_date}), DATE({CUBE}.user_first_converted_at))"
+        type: number
+
+      - name: weeks_between_account_created_and_subscription_conversion
+        sql: "DATE_DIFF('week', DATE({users_base.account_created_date}), DATE({CUBE}.user_first_converted_at))"
+        type: number
+
+      - name: months_between_account_created_and_subscription_conversion
+        sql: "DATE_DIFF('month', DATE({users_base.account_created_date}), DATE({CUBE}.user_first_converted_at))"
+        type: number
+
+      - name: user_age_when_subscribed
+        sql: >
+          CASE WHEN {days_between_account_created_and_subscription_conversion} BETWEEN 0 AND 30 THEN 'D0-D30'
+               WHEN {days_between_account_created_and_subscription_conversion} IS NULL THEN 'No Account'
+               ELSE 'D31+'
+          END
+        type: string
+
+    measures:
+      - name: user_count
+        sql: analytics_id
+        type: count_distinct
+
+      - name: retention_rate
+        sql: "CASE WHEN {retained} THEN 1.0 ELSE 0.0 END"
+        type: avg
+        meta:
+          format: percent_2
