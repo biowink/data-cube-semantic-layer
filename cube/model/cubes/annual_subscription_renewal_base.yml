@@ -1,0 +1,227 @@
+cubes:
+  - name: annual_subscription_renewal_base
+    sql_table: der.annual_subscription_renewal
+    description: "All 12M subscriptions up for renewal. Migrated from views/app_usage/annual_subscription_renewal.view.lkml"
+    public: false
+
+    # The source LookML view defines no primary key; Cube requires one on any cube
+    # with joins. Grain is one row per purchase (renewal_rate divides by distinct
+    # purchases), so purchase_transaction_id is the key.
+
+    # Mirrors the joins on the annual_subscription_renewal explore in
+    # models/app_usage.model.lkml (market_mapping is joined via user_last_properties,
+    # see that cube). users_base is also needed by the duration dimensions below.
+    joins:
+      - name: users_base
+        relationship: many_to_one
+        sql: "{CUBE}.analytics_id = {users_base.analytics_id}"
+
+      - name: user_last_properties
+        relationship: many_to_one
+        sql: "{CUBE}.analytics_id = {user_last_properties.analytics_id}"
+
+      # TODO: add these joins from the explore once their cubes exist:
+      #   - user_last_optional_consent_status (one_to_one on analytics_id)
+      #   - braze_global_control_group (one_to_one on analytics_id; the LookML sql_on
+      #     also requires users / user_last_properties / user_last_optional_consent_status
+      #     to match the same analytics_id)
+
+    dimensions:
+      - name: analytics_id
+        sql: analytics_id
+        type: string
+        meta:
+          group_label: "IDs"
+
+      - name: subscription_id
+        sql: subscription_id
+        type: string
+        meta:
+          group_label: "IDs"
+
+      - name: purchase_transaction_id
+        sql: purchase_transaction_id
+        type: string
+        primary_key: true
+        # primary keys are hidden by default; keep it visible as in the LookML
+        public: true
+        meta:
+          group_label: "IDs"
+
+      - name: renewal_transaction_id
+        sql: renewal_transaction_id
+        type: string
+        meta:
+          group_label: "IDs"
+
+      - name: purchase_is_in_intro_offer_period
+        sql: purchase_is_in_intro_offer_period
+        type: boolean
+
+      - name: reactivation
+        sql: purchase_is_reactivation
+        type: boolean
+
+      # dimension_group: purchase_backend_created_at -> base time dim (date/week/month/quarter/year) + the
+      # timeframes Cube can't derive at query time (day_of_month/day_of_year/month_num/month_name)
+      - name: purchase_backend_created_at
+        sql: purchase_backend_created_at
+        type: time
+
+      - name: purchase_backend_created_at_day_of_month
+        sql: "day({CUBE}.purchase_backend_created_at)"
+        type: number
+
+      - name: purchase_backend_created_at_day_of_year
+        sql: "day_of_year({CUBE}.purchase_backend_created_at)"
+        type: number
+
+      - name: purchase_backend_created_at_month_num
+        sql: "month({CUBE}.purchase_backend_created_at)"
+        type: number
+
+      - name: purchase_backend_created_at_month_name
+        sql: "date_format({CUBE}.purchase_backend_created_at, '%M')"
+        type: string
+
+      # dimension_group: subscription_started_at -> base time dim (date/week/month/quarter/year) + the
+      # timeframes Cube can't derive at query time (day_of_month/day_of_year/month_num/month_name)
+      - name: subscription_started_at
+        sql: subscription_started_at
+        type: time
+
+      - name: subscription_started_at_day_of_month
+        sql: "day({CUBE}.subscription_started_at)"
+        type: number
+
+      - name: subscription_started_at_day_of_year
+        sql: "day_of_year({CUBE}.subscription_started_at)"
+        type: number
+
+      - name: subscription_started_at_month_num
+        sql: "month({CUBE}.subscription_started_at)"
+        type: number
+
+      - name: subscription_started_at_month_name
+        sql: "date_format({CUBE}.subscription_started_at, '%M')"
+        type: string
+
+      # dimension_group: subscription_or_reactivation_started_at -> base time dim (date/week/month/quarter/year) + the
+      # timeframes Cube can't derive at query time (day_of_month/day_of_year/month_num/month_name)
+      - name: subscription_or_reactivation_started_at
+        sql: subscription_or_reactivation_started_at
+        type: time
+
+      - name: subscription_or_reactivation_started_at_day_of_month
+        sql: "day({CUBE}.subscription_or_reactivation_started_at)"
+        type: number
+
+      - name: subscription_or_reactivation_started_at_day_of_year
+        sql: "day_of_year({CUBE}.subscription_or_reactivation_started_at)"
+        type: number
+
+      - name: subscription_or_reactivation_started_at_month_num
+        sql: "month({CUBE}.subscription_or_reactivation_started_at)"
+        type: number
+
+      - name: subscription_or_reactivation_started_at_month_name
+        sql: "date_format({CUBE}.subscription_or_reactivation_started_at, '%M')"
+        type: string
+
+      # dimension_group: purchase_expires_at -> base time dim (date/week/month/quarter/year) + the
+      # timeframes Cube can't derive at query time (day_of_month/day_of_year/month_num/month_name)
+      - name: purchase_expires_at
+        sql: purchase_expires_at
+        type: time
+
+      - name: purchase_expires_at_day_of_month
+        sql: "day({CUBE}.purchase_expires_at)"
+        type: number
+
+      - name: purchase_expires_at_day_of_year
+        sql: "day_of_year({CUBE}.purchase_expires_at)"
+        type: number
+
+      - name: purchase_expires_at_month_num
+        sql: "month({CUBE}.purchase_expires_at)"
+        type: number
+
+      - name: purchase_expires_at_month_name
+        sql: "date_format({CUBE}.purchase_expires_at, '%M')"
+        type: string
+
+      # dimension_group: renewal_backend_created_at -> base time dim (date/week/month/quarter/year) + the
+      # timeframes Cube can't derive at query time (day_of_month/day_of_year/month_num/month_name)
+      - name: renewal_backend_created_at
+        sql: renewal_backend_created_at
+        type: time
+
+      - name: renewal_backend_created_at_day_of_month
+        sql: "day({CUBE}.renewal_backend_created_at)"
+        type: number
+
+      - name: renewal_backend_created_at_day_of_year
+        sql: "day_of_year({CUBE}.renewal_backend_created_at)"
+        type: number
+
+      - name: renewal_backend_created_at_month_num
+        sql: "month({CUBE}.renewal_backend_created_at)"
+        type: number
+
+      - name: renewal_backend_created_at_month_name
+        sql: "date_format({CUBE}.renewal_backend_created_at, '%M')"
+        type: string
+
+      # Renewal
+      - name: renewed
+        sql: "{CUBE}.renewal_transaction_id IS NOT NULL"
+        type: boolean
+
+      - name: year_of_subscription
+        description: "Number of years the subscription has existed. i.e. 1 = first purchase, 2 = first renewal, etc."
+        sql: >
+          FLOOR(CASE WHEN {CUBE}.subscription_or_reactivation_started_at <= {CUBE}.purchase_backend_created_at
+                     THEN DATE_DIFF('month', DATE_TRUNC('month', {CUBE}.subscription_or_reactivation_started_at), DATE_TRUNC('month', {CUBE}.purchase_backend_created_at))
+                     ELSE 0 END * 1.0 / 12) + 1
+        type: number
+
+      # dimension_group: between_account_created_and_subscription_conversion
+      # (type: duration, datatype: date, intervals: day/week/month) -> one number
+      # dimension per interval, counting complete intervals between the two dates
+      - name: days_between_account_created_and_subscription_conversion
+        sql: "DATE_DIFF('day', DATE({users_base.account_created_date}), DATE({CUBE}.subscription_started_at))"
+        type: number
+
+      - name: weeks_between_account_created_and_subscription_conversion
+        sql: "DATE_DIFF('week', DATE({users_base.account_created_date}), DATE({CUBE}.subscription_started_at))"
+        type: number
+
+      - name: months_between_account_created_and_subscription_conversion
+        sql: "DATE_DIFF('month', DATE({users_base.account_created_date}), DATE({CUBE}.subscription_started_at))"
+        type: number
+
+      - name: user_age_when_subscribed
+        description: "This is only intended for use with first year subscriptions."
+        sql: >
+          CASE WHEN {days_between_account_created_and_subscription_conversion} BETWEEN 0 AND 30 THEN 'D0-D30'
+               WHEN {days_between_account_created_and_subscription_conversion} IS NULL THEN 'No Account'
+               ELSE 'D31+'
+          END
+        type: string
+
+    measures:
+      - name: purchase_count
+        sql: purchase_transaction_id
+        type: count_distinct
+
+      - name: renewal_count
+        sql: renewal_transaction_id
+        type: count_distinct
+
+      # NULLIF on the numerator is as in the source LookML (returns NULL rather
+      # than 0 when there are no renewals)
+      - name: renewal_rate
+        sql: "CAST(NULLIF({renewal_count}, 0) AS DOUBLE) / {purchase_count}"
+        type: number
+        meta:
+          format: percent_2

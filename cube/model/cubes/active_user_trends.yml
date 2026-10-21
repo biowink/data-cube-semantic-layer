@@ -1,0 +1,163 @@
+cubes:
+  - name: active_user_trends
+    sql_table: rep.active_user_trends
+    description: "High-level user activity metrics by platform at a daily level, for the recent past. Migrated from views/app_usage/active_user_trends.view.lkml"
+
+    # The source LookML view defines no primary key, so none is set here either.
+    # Add one before joining other cubes to this cube.
+
+    dimensions:
+      # dimension_group: date -> base time dim (date/week/month) + the timeframes
+      # Cube can't derive at query time (day_of_week/day_of_week_index/day_of_month)
+      - name: date
+        sql: "{CUBE}.date"
+        type: time
+
+      - name: date_day_of_week
+        sql: "date_format({CUBE}.date, '%W')"
+        type: string
+
+      # Looker's index with the default Monday week start: Monday = 0 ... Sunday = 6
+      - name: date_day_of_week_index
+        sql: "day_of_week({CUBE}.date) - 1"
+        type: number
+
+      - name: date_day_of_month
+        sql: "day({CUBE}.date)"
+        type: number
+
+      - name: last_day_of_month
+        sql: "EXTRACT(DAY FROM DATE_ADD('day', 1, {CUBE}.date)) = 1"
+        type: boolean
+
+      - name: platform
+        sql: "COALESCE({CUBE}.platform, 'platform data missing')"
+        type: string
+
+    measures:
+      # Device-based metrics
+      - name: count_mau_device
+        title: "Device MAU"
+        sql: count_mau_device
+        type: sum
+        meta:
+          group_label: "Device-Based Metrics"
+
+      - name: count_wau_device
+        title: "Device WAU"
+        sql: count_wau_device
+        type: sum
+        meta:
+          group_label: "Device-Based Metrics"
+
+      - name: count_dau_device
+        title: "Device DAU"
+        sql: count_dau_device
+        type: sum
+        meta:
+          group_label: "Device-Based Metrics"
+
+      - name: existing_mau_device
+        sql: existing_mau_device
+        type: sum
+        public: false
+
+      - name: retained_mau_device
+        sql: retained_mau_device
+        type: sum
+        public: false
+
+      - name: device_mau_retention
+        title: "MoM Existing Device MAU Retention"
+        description: "The percentage of devices which were MAU in the preceding 30-day period active again in the next 30 days"
+        sql: "CAST({retained_mau_device} AS DOUBLE) / {existing_mau_device}"
+        type: number
+        meta:
+          format: percent_1
+          group_label: "Device-Based Metrics"
+
+      - name: device_dau_mau
+        title: "Device DAU/MAU"
+        sql: "CAST({count_dau_device} AS DOUBLE) / {count_mau_device}"
+        type: number
+        meta:
+          format: percent_1
+          group_label: "Device-Based Metrics"
+
+      # Account-based metrics
+      - name: count_mau_account
+        title: "Account MAU"
+        sql: count_mau_account
+        type: sum
+        meta:
+          group_label: "Account-Based Metrics"
+
+      - name: count_wau_account
+        title: "Account WAU"
+        sql: count_wau_account
+        type: sum
+        meta:
+          group_label: "Account-Based Metrics"
+
+      - name: count_dau_account
+        title: "Account DAU"
+        sql: count_dau_account
+        type: sum
+        meta:
+          group_label: "Account-Based Metrics"
+
+      - name: existing_mau_account
+        sql: existing_mau_account
+        type: sum
+        public: false
+
+      - name: retained_mau_account
+        title: "Account MAU Retained"
+        sql: retained_mau_account
+        type: sum
+        meta:
+          group_label: "Account-Based Metrics"
+
+      - name: existing_wau_account
+        sql: existing_wau_account
+        type: sum
+        public: false
+
+      - name: retained_wau_account
+        sql: retained_wau_account
+        type: sum
+        public: false
+
+      - name: account_mau_retention
+        title: "MoM Existing Account MAU Retention"
+        description: "The percentage of accounts which were MAU in the preceding 30-day period active again in the next 30 days"
+        sql: "CAST({retained_mau_account} AS DOUBLE) / {existing_mau_account}"
+        type: number
+        meta:
+          format: percent_1
+          group_label: "Account-Based Metrics"
+
+      - name: account_dau_mau
+        title: "Account DAU/MAU"
+        sql: "CAST({count_dau_account} AS DOUBLE) / {count_mau_account}"
+        type: number
+        meta:
+          format: percent_1
+          group_label: "Account-Based Metrics"
+
+      - name: account_wau_retention
+        title: "WoW Existing Account WAU Retention"
+        description: "The percentage of accounts which were WAU in the preceding 7-day period active again in the next 7 days"
+        sql: "CAST({retained_wau_account} AS DOUBLE) / {existing_wau_account}"
+        type: number
+        meta:
+          format: percent_1
+          group_label: "Account-Based Metrics"
+
+      - name: account_wau_mau
+        title: "Account WAU/MAU"
+        sql: "CAST({count_wau_account} AS DOUBLE) / {count_mau_account}"
+        type: number
+        meta:
+          format: percent_1
+          group_label: "Account-Based Metrics"

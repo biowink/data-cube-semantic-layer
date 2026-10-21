@@ -1,0 +1,24 @@
+views:
+  - name: tiktok_campaign_performance
+    title: "TikTok Campaign Performance"
+    description: "Equivalent of the tiktok_campaign_performance explore in models/adjust.model.lkml"
+
+    cubes:
+      - join_path: tiktok_campaign_performance_base
+        includes: "*"
+        # hidden: yes in the source LookML
+        excludes:
+          - pk
+          - tt_app_id
+          - tt_app_name
+          - campaign_id
+          - adgroup_id
+          - ad_id
+          - average_video_play
+          - average_video_play_per_user
+
+      - join_path: tiktok_campaign_performance_base.market_mapping
+        includes:
+          - country
+          - market
+          - region

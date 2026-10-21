@@ -1,16 +1,20 @@
 cubes:
   - name: market_mapping
     sql_table: core.countries
-    description: "Migrated from market_mapping.view.lkml"
+    description: "Migrated from views/market_mapping.view.lkml"
     public: false
 
     dimensions:
-      # no primary key declared in the source LookML view; country_name is the
-      # natural unique key of this country/market/region mapping table
+      # Not a primary key in the source LookML, but Cube needs one on the "one"
+      # side of a many_to_one join. iso_alpha_2 is one row per country.
+      - name: country_code
+        sql: iso_alpha_2
+        type: string
+        primary_key: true
+
       - name: country
         sql: country_name
         type: string
-        primary_key: true
 
       - name: market
         sql: "COALESCE({CUBE}.market, 'Missing Country Data')"

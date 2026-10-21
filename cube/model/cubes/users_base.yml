@@ -66,7 +66,7 @@ cubes:
         type: time
 
       - name: account_created_day_of_week
-        sql: "date_format({CUBE}.backend_created_at, '%A')"
+        sql: "date_format({CUBE}.backend_created_at, '%W')"
         type: string
 
       - name: account_created_day_of_month

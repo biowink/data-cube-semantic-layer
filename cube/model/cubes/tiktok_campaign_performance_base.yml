@@ -1,0 +1,326 @@
+cubes:
+  - name: tiktok_campaign_performance_base
+    sql_table: der.tiktok_campaign_performance
+    description: "Migrated from views/adjust/tiktok_campaign_performance.view.lkml"
+    public: false
+
+    # Mirrors the market_mapping join on the tiktok_campaign_performance explore
+    # in models/adjust.model.lkml
+    joins:
+      - name: market_mapping
+        relationship: many_to_one
+        sql: "{CUBE}.country_code = {market_mapping.country_code}"
+
+    dimensions:
+      # Grain: date + ad_id + country_code (the source LookML view defines no key).
+      # COALESCE keeps the key non-NULL if any part is NULL.
+      - name: pk
+        sql: >
+          COALESCE(CAST({CUBE}.date AS VARCHAR), '') || '|' ||
+          COALESCE(CAST({CUBE}.ad_id AS VARCHAR), '') || '|' ||
+          COALESCE({CUBE}.country_code, '')
+        type: string
+        primary_key: true
+        public: false
+
+      - name: tt_app_id
+        sql: tt_app_id
+        type: number
+        public: false
+
+      - name: tt_app_name
+        sql: tt_app_name
+        type: string
+        public: false
+
+      - name: platform
+        sql: >
+          CASE WHEN {CUBE}.mobile_app_id = 'com.clue.android' THEN 'android'
+               WHEN {CUBE}.mobile_app_id = '657189652' THEN 'ios'
+               ELSE {CUBE}.mobile_app_id
+          END
+        type: string
+
+      - name: campaign_id
+        sql: campaign_id
+        type: number
+        public: false
+
+      - name: campaign_name
+        sql: campaign_name
+        type: string
+
+      - name: adgroup_id
+        sql: adgroup_id
+        type: number
+        public: false
+
+      - name: adgroup_name
+        sql: adgroup_name
+        type: string
+
+      - name: ad_id
+        sql: ad_id
+        type: number
+        public: false
+
+      - name: ad_name
+        sql: ad_name
+        type: string
+
+      - name: ad_text
+        sql: ad_text
+        type: string
+
+      # Creative fields parsed from the underscore-delimited ad_name
+      - name: creative_language
+        sql: "ELEMENT_AT(SPLIT({CUBE}.ad_name, '_'), 1)"
+        type: string
+        meta:
+          group_label: "Creative Fields"
+
+      - name: creative_app_mode
+        sql: "ELEMENT_AT(SPLIT({CUBE}.ad_name, '_'), 2)"
+        type: string
+        meta:
+          group_label: "Creative Fields"
+
+      - name: creative_style
+        sql: "ELEMENT_AT(SPLIT({CUBE}.ad_name, '_'), 3)"
+        type: string
+        meta:
+          group_label: "Creative Fields"
+
+      - name: creative_topic
+        sql: "ELEMENT_AT(SPLIT({CUBE}.ad_name, '_'), 4)"
+        type: string
+        meta:
+          group_label: "Creative Fields"
+
+      - name: creative_details
+        sql: "ELEMENT_AT(SPLIT({CUBE}.ad_name, '_'), 5)"
+        type: string
+        meta:
+          group_label: "Creative Fields"
+
+      - name: creative_dimensions
+        sql: "ELEMENT_AT(SPLIT(ELEMENT_AT(SPLIT({CUBE}.ad_name, '_'), 6), '.'), 1)"
+        type: string
+        meta:
+          group_label: "Creative Fields"
+
+      - name: creative_creator
+        sql: "ELEMENT_AT(SPLIT(ELEMENT_AT(SPLIT({CUBE}.ad_name, '_'), 7), '.'), 1)"
+        type: string
+        meta:
+          group_label: "Creative Fields"
+
+      - name: creative_batch
+        sql: "ELEMENT_AT(SPLIT(ELEMENT_AT(SPLIT({CUBE}.ad_name, '_'), 8), '.'), 1)"
+        type: string
+        meta:
+          group_label: "Creative Fields"
+
+      - name: country_code
+        sql: country_code
+        type: string
+
+      # dimension_group: date -> base time dim + the timeframes Cube can't derive
+      # at query time (month_name/day_of_week/day_of_month/day_of_year)
+      - name: date
+        sql: "{CUBE}.date"
+        type: time
+
+      - name: date_month_name
+        sql: "date_format({CUBE}.date, '%M')"
+        type: string
+
+      - name: date_day_of_week
+        sql: "date_format({CUBE}.date, '%W')"
+        type: string
+
+      - name: date_day_of_month
+        sql: "day({CUBE}.date)"
+        type: number
+
+      - name: date_day_of_year
+        sql: "day_of_year({CUBE}.date)"
+        type: number
+
+      - name: promotion_type
+        sql: promotion_type
+        type: string
+
+      - name: placement_type
+        sql: placement_type
+        type: string
+
+      - name: average_video_play
+        sql: average_video_play
+        type: number
+        public: false
+
+      - name: average_video_play_per_user
+        sql: average_video_play_per_user
+        type: number
+        public: false
+
+    measures:
+      - name: profile_visits
+        sql: profile_visits
+        type: sum
+
+      - name: spend
+        sql: spend
+        type: sum
+        meta:
+          format: eur
+
+      - name: impressions
+        sql: impressions
+        type: sum
+
+      - name: likes
+        sql: likes
+        type: sum
+
+      - name: follows
+        sql: follows
+        type: sum
+
+      - name: shares
+        sql: shares
+        type: sum
+
+      - name: clicks
+        sql: clicks
+        type: sum
+
+      - name: reach
+        sql: reach
+        type: sum
+
+      - name: frequency
+        sql: "1.0 * {impressions} / NULLIF({reach}, 0)"
+        type: number
+        meta:
+          format: decimal_2
+
+      - name: conversions
+        sql: conversion
+        type: sum
+
+      - name: conversion_rate
+        sql: "1.0 * {conversions} / NULLIF({clicks}, 0)"
+        type: number
+        meta:
+          format: percent_2
+
+      - name: real_time_conversions
+        sql: real_time_conversion
+        type: sum
+
+      - name: real_time_conversion_rate
+        sql: "1.0 * {real_time_conversions} / NULLIF({clicks}, 0)"
+        type: number
+        meta:
+          format: percent_2
+
+      - name: real_time_cost_per_conversion
+        sql: "1.0 * {spend} / NULLIF({real_time_conversions}, 0)"
+        type: number
+        meta:
+          format: eur
+
+      - name: cost_per_1000_reached
+        sql: "1.0 * {spend} / NULLIF({reach}, 0) * 1000"
+        type: number
+        meta:
+          format: eur
+
+      - name: cpm
+        title: "CPM"
+        sql: "1.0 * {spend} / NULLIF({impressions}, 0) * 1000"
+        type: number
+        meta:
+          format: eur
+
+      - name: cpc
+        title: "CPC"
+        sql: "1.0 * {spend} / NULLIF({clicks}, 0)"
+        type: number
+        meta:
+          format: eur
+
+      - name: ctr
+        title: "CTR"
+        sql: "1.0 * {clicks} / NULLIF({impressions}, 0)"
+        type: number
+        meta:
+          format: percent_2
+
+      - name: cost_per_conversion
+        sql: "1.0 * {spend} / NULLIF({conversions}, 0)"
+        type: number
+        meta:
+          format: eur
+
+      - name: results
+        sql: result
+        type: sum
+
+      - name: real_time_results
+        sql: real_time_result
+        type: sum
+
+      - name: result_rate
+        sql: "1.0 * {results} / NULLIF({clicks}, 0)"
+        type: number
+        meta:
+          format: percent_2
+
+      - name: real_time_result_rate
+        sql: "1.0 * {real_time_results} / NULLIF({clicks}, 0)"
+        type: number
+        meta:
+          format: percent_2
+
+      - name: cost_per_result
+        sql: "1.0 * {spend} / NULLIF({results}, 0)"
+        type: number
+        meta:
+          format: eur
+
+      - name: real_time_cost_per_result
+        sql: "1.0 * {spend} / NULLIF({real_time_results}, 0)"
+        type: number
+        meta:
+          format: eur
+
+      - name: video_play_actions
+        sql: video_play_actions
+        type: sum
+
+      - name: video_views_p25
+        sql: video_views_p25
+        type: sum
+
+      - name: video_views_p50
+        sql: video_views_p50
+        type: sum
+
+      - name: video_views_p75
+        sql: video_views_p75
+        type: sum
+
+      - name: video_views_p100
+        sql: video_views_p100
+        type: sum
+
+      - name: video_watched_2s
+        sql: video_watched_2s
+        type: sum
+
+      - name: video_watched_6s
+        sql: video_watched_6s
+        type: sum
