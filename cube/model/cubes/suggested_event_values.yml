@@ -15,7 +15,7 @@ cubes:
       FROM keys_data
       CROSS JOIN UNNEST (keys) AS t (key)
     description: "Migrated from the suggested_event_properties LookML view"
-    public: false
+    public: true
     refresh_key:
       every: {{ suggestions_refresh_every }}
 
@@ -46,7 +46,7 @@ cubes:
       WHERE derived_tstamp >= CURRENT_DATE - INTERVAL '3' DAY
       GROUP BY 1
     description: "Migrated from the suggested_mobile_event_names LookML view"
-    public: false
+    public: true
     refresh_key:
       every: {{ suggestions_refresh_every }}
 
@@ -75,7 +75,7 @@ cubes:
       WHERE derived_tstamp >= CURRENT_DATE - INTERVAL '3' DAY
       GROUP BY 1
     description: "Migrated from the suggested_countries LookML view"
-    public: false
+    public: true
     refresh_key:
       every: {{ suggestions_refresh_every }}
 
@@ -104,7 +104,7 @@ cubes:
       WHERE derived_tstamp >= CURRENT_DATE - INTERVAL '3' DAY
       GROUP BY 1
     description: "Migrated from the suggested_languages LookML view"
-    public: false
+    public: true
     refresh_key:
       every: {{ suggestions_refresh_every }}
 
@@ -133,7 +133,7 @@ cubes:
       WHERE derived_tstamp >= CURRENT_DATE - INTERVAL '3' DAY
       GROUP BY 1
     description: "Migrated from the suggested_platforms LookML view"
-    public: false
+    public: true
     refresh_key:
       every: {{ suggestions_refresh_every }}
 
@@ -162,7 +162,7 @@ cubes:
       WHERE derived_tstamp >= CURRENT_DATE - INTERVAL '3' DAY
       GROUP BY 1
     description: "Migrated from the suggested_schema_names LookML view"
-    public: false
+    public: true
     refresh_key:
       every: {{ suggestions_refresh_every }}
 
@@ -191,7 +191,7 @@ cubes:
       WHERE derived_tstamp >= CURRENT_DATE - INTERVAL '3' DAY
       GROUP BY 1
     description: "Migrated from the suggested_navigation_contexts LookML view"
-    public: false
+    public: true
     refresh_key:
       every: {{ suggestions_refresh_every }}
 
@@ -220,7 +220,7 @@ cubes:
       WHERE derived_tstamp >= CURRENT_DATE - INTERVAL '3' DAY
       GROUP BY 1
     description: "Migrated from the suggested_product_tiers LookML view"
-    public: false
+    public: true
     refresh_key:
       every: {{ suggestions_refresh_every }}
 
@@ -249,7 +249,7 @@ cubes:
       WHERE derived_tstamp >= CURRENT_DATE - INTERVAL '3' DAY
       GROUP BY 1
     description: "Migrated from the suggested_modes LookML view"
-    public: false
+    public: true
     refresh_key:
       every: {{ suggestions_refresh_every }}
 
@@ -278,7 +278,7 @@ cubes:
       WHERE derived_tstamp >= CURRENT_DATE - INTERVAL '3' DAY AND mobile_event_name = 'Open Article'
       GROUP BY 1
     description: "Migrated from the suggested_article_categories LookML view"
-    public: false
+    public: true
     refresh_key:
       every: {{ suggestions_refresh_every }}
 
@@ -307,7 +307,7 @@ cubes:
       WHERE derived_tstamp >= CURRENT_DATE - INTERVAL '3' DAY AND mobile_event_name = 'Open Article'
       GROUP BY 1
     description: "Migrated from the suggested_article_titles LookML view"
-    public: false
+    public: true
     refresh_key:
       every: {{ suggestions_refresh_every }}
 
@@ -336,7 +336,7 @@ cubes:
       WHERE derived_tstamp >= CURRENT_DATE - INTERVAL '3' DAY AND mobile_event_name = 'Open Topic'
       GROUP BY 1
     description: "Migrated from the suggested_topic_names LookML view"
-    public: false
+    public: true
     refresh_key:
       every: {{ suggestions_refresh_every }}
 
@@ -365,7 +365,7 @@ cubes:
       WHERE derived_tstamp >= CURRENT_DATE - INTERVAL '3' DAY AND mobile_event_name = 'Open Topic'
       GROUP BY 1
     description: "Migrated from the suggested_meta_ids LookML view"
-    public: false
+    public: true
     refresh_key:
       every: {{ suggestions_refresh_every }}
 
