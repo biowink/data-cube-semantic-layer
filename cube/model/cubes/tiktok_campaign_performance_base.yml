@@ -76,50 +76,34 @@ cubes:
       - name: creative_language
         sql: "ELEMENT_AT(SPLIT({CUBE}.ad_name, '_'), 1)"
         type: string
-        meta:
-          group_label: "Creative Fields"
 
       - name: creative_app_mode
         sql: "ELEMENT_AT(SPLIT({CUBE}.ad_name, '_'), 2)"
         type: string
-        meta:
-          group_label: "Creative Fields"
 
       - name: creative_style
         sql: "ELEMENT_AT(SPLIT({CUBE}.ad_name, '_'), 3)"
         type: string
-        meta:
-          group_label: "Creative Fields"
 
       - name: creative_topic
         sql: "ELEMENT_AT(SPLIT({CUBE}.ad_name, '_'), 4)"
         type: string
-        meta:
-          group_label: "Creative Fields"
 
       - name: creative_details
         sql: "ELEMENT_AT(SPLIT({CUBE}.ad_name, '_'), 5)"
         type: string
-        meta:
-          group_label: "Creative Fields"
 
       - name: creative_dimensions
         sql: "ELEMENT_AT(SPLIT(ELEMENT_AT(SPLIT({CUBE}.ad_name, '_'), 6), '.'), 1)"
         type: string
-        meta:
-          group_label: "Creative Fields"
 
       - name: creative_creator
         sql: "ELEMENT_AT(SPLIT(ELEMENT_AT(SPLIT({CUBE}.ad_name, '_'), 7), '.'), 1)"
         type: string
-        meta:
-          group_label: "Creative Fields"
 
       - name: creative_batch
         sql: "ELEMENT_AT(SPLIT(ELEMENT_AT(SPLIT({CUBE}.ad_name, '_'), 8), '.'), 1)"
         type: string
-        meta:
-          group_label: "Creative Fields"
 
       - name: country_code
         sql: country_code
@@ -173,8 +157,6 @@ cubes:
       - name: spend
         sql: spend
         type: sum
-        meta:
-          format: eur
 
       - name: impressions
         sql: impressions
@@ -203,8 +185,6 @@ cubes:
       - name: frequency
         sql: "1.0 * {impressions} / NULLIF({reach}, 0)"
         type: number
-        meta:
-          format: decimal_2
 
       - name: conversions
         sql: conversion
@@ -213,8 +193,6 @@ cubes:
       - name: conversion_rate
         sql: "1.0 * {conversions} / NULLIF({clicks}, 0)"
         type: number
-        meta:
-          format: percent_2
 
       - name: real_time_conversions
         sql: real_time_conversion
@@ -223,47 +201,33 @@ cubes:
       - name: real_time_conversion_rate
         sql: "1.0 * {real_time_conversions} / NULLIF({clicks}, 0)"
         type: number
-        meta:
-          format: percent_2
 
       - name: real_time_cost_per_conversion
         sql: "1.0 * {spend} / NULLIF({real_time_conversions}, 0)"
         type: number
-        meta:
-          format: eur
 
       - name: cost_per_1000_reached
         sql: "1.0 * {spend} / NULLIF({reach}, 0) * 1000"
         type: number
-        meta:
-          format: eur
 
       - name: cpm
         title: "CPM"
         sql: "1.0 * {spend} / NULLIF({impressions}, 0) * 1000"
         type: number
-        meta:
-          format: eur
 
       - name: cpc
         title: "CPC"
         sql: "1.0 * {spend} / NULLIF({clicks}, 0)"
         type: number
-        meta:
-          format: eur
 
       - name: ctr
         title: "CTR"
         sql: "1.0 * {clicks} / NULLIF({impressions}, 0)"
         type: number
-        meta:
-          format: percent_2
 
       - name: cost_per_conversion
         sql: "1.0 * {spend} / NULLIF({conversions}, 0)"
         type: number
-        meta:
-          format: eur
 
       - name: results
         sql: result
@@ -276,26 +240,18 @@ cubes:
       - name: result_rate
         sql: "1.0 * {results} / NULLIF({clicks}, 0)"
         type: number
-        meta:
-          format: percent_2
 
       - name: real_time_result_rate
         sql: "1.0 * {real_time_results} / NULLIF({clicks}, 0)"
         type: number
-        meta:
-          format: percent_2
 
       - name: cost_per_result
         sql: "1.0 * {spend} / NULLIF({results}, 0)"
         type: number
-        meta:
-          format: eur
 
       - name: real_time_cost_per_result
         sql: "1.0 * {spend} / NULLIF({real_time_results}, 0)"
         type: number
-        meta:
-          format: eur
 
       - name: video_play_actions
         sql: video_play_actions

@@ -44,50 +44,34 @@ cubes:
       - name: creative_language
         sql: "ELEMENT_AT(SPLIT({CUBE}.ad_name, '_'), 1)"
         type: string
-        meta:
-          group_label: "Creative Fields"
 
       - name: creative_app_mode
         sql: "ELEMENT_AT(SPLIT({CUBE}.ad_name, '_'), 2)"
         type: string
-        meta:
-          group_label: "Creative Fields"
 
       - name: creative_style
         sql: "ELEMENT_AT(SPLIT({CUBE}.ad_name, '_'), 3)"
         type: string
-        meta:
-          group_label: "Creative Fields"
 
       - name: creative_topic
         sql: "ELEMENT_AT(SPLIT({CUBE}.ad_name, '_'), 4)"
         type: string
-        meta:
-          group_label: "Creative Fields"
 
       - name: creative_details
         sql: "ELEMENT_AT(SPLIT({CUBE}.ad_name, '_'), 5)"
         type: string
-        meta:
-          group_label: "Creative Fields"
 
       - name: creative_dimensions
         sql: "ELEMENT_AT(SPLIT(ELEMENT_AT(SPLIT({CUBE}.ad_name, '_'), 6), '.'), 1)"
         type: string
-        meta:
-          group_label: "Creative Fields"
 
       - name: creative_creator
         sql: "ELEMENT_AT(SPLIT(ELEMENT_AT(SPLIT({CUBE}.ad_name, '_'), 7), '.'), 1)"
         type: string
-        meta:
-          group_label: "Creative Fields"
 
       - name: creative_batch
         sql: "ELEMENT_AT(SPLIT(ELEMENT_AT(SPLIT({CUBE}.ad_name, '_'), 8), '.'), 1)"
         type: string
-        meta:
-          group_label: "Creative Fields"
 
       - name: objective
         sql: objective
@@ -123,286 +107,186 @@ cubes:
       - name: spend
         sql: spend
         type: sum
-        meta:
-          format: eur
 
       - name: impressions
         sql: impressions
         type: sum
-        meta:
-          format: decimal_0
 
       - name: reach
         sql: reach
         type: sum
-        meta:
-          format: decimal_0
 
       - name: full_view_impressions
         sql: full_view_impressions
         type: sum
-        meta:
-          format: decimal_0
 
       - name: full_view_reach
         sql: full_view_reach
         type: sum
-        meta:
-          format: decimal_0
 
       # Clicks & standard engagement
       - name: clicks
         sql: clicks
         type: sum
-        meta:
-          format: decimal_0
 
       - name: unique_clicks
         sql: unique_clicks
         type: sum
-        meta:
-          format: decimal_0
 
       - name: link_clicks
         sql: link_clicks
         type: sum
-        meta:
-          format: decimal_0
 
       - name: inline_link_clicks
         sql: inline_link_clicks
         type: sum
-        meta:
-          format: decimal_0
 
       - name: unique_inline_link_clicks
         sql: unique_inline_link_clicks
         type: sum
-        meta:
-          format: decimal_0
 
       - name: unique_outbound_clicks
         sql: unique_outbound_clicks
         type: sum
-        meta:
-          format: decimal_0
 
       - name: page_engagements
         sql: page_engagements
         type: sum
-        meta:
-          format: decimal_0
 
       - name: post_engagements
         sql: post_engagements
         type: sum
-        meta:
-          format: decimal_0
 
       - name: inline_post_engagement
         sql: inline_post_engagement
         type: sum
-        meta:
-          format: decimal_0
 
       - name: post_interactions_gross
         sql: post_interactions_gross
         type: sum
-        meta:
-          format: decimal_0
 
       - name: post_interactions_net
         sql: post_interactions_net
         type: sum
-        meta:
-          format: decimal_0
 
       - name: post_reactions
         sql: post_reactions
         type: sum
-        meta:
-          format: decimal_0
 
       - name: comments
         sql: comments
         type: sum
-        meta:
-          format: decimal_0
 
       # Video performance & instant experience
       - name: video_views
         sql: video_views
         type: sum
-        meta:
-          format: decimal_0
-          group_label: "Video"
 
       - name: video_play_actions
         sql: video_play_actions
         type: sum
-        meta:
-          format: decimal_0
-          group_label: "Video"
 
       - name: video_15_sec_watched_actions
         sql: video_15_sec_watched_actions
         type: sum
-        meta:
-          format: decimal_0
-          group_label: "Video"
 
       - name: video_30_sec_watched_actions
         sql: video_30_sec_watched_actions
         type: sum
-        meta:
-          format: decimal_0
-          group_label: "Video"
 
       - name: video_p25_watched_actions
         sql: video_p25_watched_actions
         type: sum
-        meta:
-          format: decimal_0
-          group_label: "Video"
 
       - name: video_p50_watched_actions
         sql: video_p50_watched_actions
         type: sum
-        meta:
-          format: decimal_0
-          group_label: "Video"
 
       - name: video_p75_watched_actions
         sql: video_p75_watched_actions
         type: sum
-        meta:
-          format: decimal_0
-          group_label: "Video"
 
       - name: video_p95_watched_actions
         sql: video_p95_watched_actions
         type: sum
-        meta:
-          format: decimal_0
-          group_label: "Video"
 
       - name: video_p100_watched_actions
         sql: video_p100_watched_actions
         type: sum
-        meta:
-          format: decimal_0
-          group_label: "Video"
 
       - name: instant_experience_clicks_to_open
         sql: instant_experience_clicks_to_open
         type: sum
-        meta:
-          format: decimal_0
 
       - name: instant_experience_clicks_to_start
         sql: instant_experience_clicks_to_start
         type: sum
-        meta:
-          format: decimal_0
 
       # Downstream mobile/store conversions
       - name: installs
         sql: mobile_app_installs
         type: sum
-        meta:
-          format: decimal_0
 
       - name: app_store_visits
         sql: app_store_visits
         type: sum
-        meta:
-          format: decimal_0
 
       # Calculated measures (rates & performance)
       - name: frequency
         sql: "CASE WHEN {reach} > 0 THEN 1.0 * {impressions} / {reach} ELSE 0 END"
         type: number
-        meta:
-          format: decimal_2
 
       - name: click_through_rate
         title: "CTR"
         sql: "CASE WHEN {impressions} > 0 THEN 1.0 * {clicks} / {impressions} ELSE 0 END"
         type: number
-        meta:
-          format: percent_2
 
       - name: link_click_through_rate
         title: "Link CTR"
         sql: "CASE WHEN {impressions} > 0 THEN 1.0 * {link_clicks} / {impressions} ELSE 0 END"
         type: number
-        meta:
-          format: percent_2
 
       - name: install_rate
         title: "Install CVR"
         sql: "CASE WHEN {link_clicks} > 0 THEN 1.0 * {installs} / {link_clicks} ELSE 0 END"
         type: number
-        meta:
-          format: percent_2
 
       - name: cost_per_click
         title: "Cost per Click"
         sql: "CASE WHEN {clicks} > 0 THEN 1.0 * {spend} / {clicks} ELSE 0 END"
         type: number
-        meta:
-          format: eur
 
       - name: cost_per_link_click
         title: "Cost per Link Click"
         sql: "CASE WHEN {link_clicks} > 0 THEN 1.0 * {spend} / {link_clicks} ELSE 0 END"
         type: number
-        meta:
-          format: eur
 
       - name: cost_per_install
         title: "Cost per Install"
         sql: "CASE WHEN {installs} > 0 THEN 1.0 * {spend} / {installs} ELSE 0 END"
         type: number
-        meta:
-          format: eur
 
       - name: video_p25_completion_rate
         title: "25% Video Completion Rate"
         sql: "CASE WHEN {video_play_actions} > 0 THEN 1.0 * {video_p25_watched_actions} / {video_play_actions} ELSE 0 END"
         type: number
-        meta:
-          format: percent_2
-          group_label: "Video"
 
       - name: video_p50_completion_rate
         title: "50% Video Completion Rate"
         sql: "CASE WHEN {video_play_actions} > 0 THEN 1.0 * {video_p50_watched_actions} / {video_play_actions} ELSE 0 END"
         type: number
-        meta:
-          format: percent_2
-          group_label: "Video"
 
       - name: video_p75_completion_rate
         title: "75% Video Completion Rate"
         sql: "CASE WHEN {video_play_actions} > 0 THEN 1.0 * {video_p75_watched_actions} / {video_play_actions} ELSE 0 END"
         type: number
-        meta:
-          format: percent_2
-          group_label: "Video"
 
       - name: video_p95_completion_rate
         title: "95% Video Completion Rate"
         sql: "CASE WHEN {video_play_actions} > 0 THEN 1.0 * {video_p95_watched_actions} / {video_play_actions} ELSE 0 END"
         type: number
-        meta:
-          format: percent_2
-          group_label: "Video"
 
       - name: video_p100_completion_rate
         title: "100% Video Completion Rate"
         sql: "CASE WHEN {video_play_actions} > 0 THEN 1.0 * {video_p100_watched_actions} / {video_play_actions} ELSE 0 END"
         type: number
-        meta:
-          format: percent_2
-          group_label: "Video"
