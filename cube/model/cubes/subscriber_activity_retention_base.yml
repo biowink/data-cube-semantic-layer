@@ -2,6 +2,7 @@ cubes:
   - name: subscriber_activity_retention_base
     sql_table: der.subscriber_activity_retention
     description: "How many months 12m subscribers were active after subscribing. Migrated from views/app_usage/subscriber_activity_retention.view.lkml"
+    public: false
 
     # Mirrors the joins on the subscriber_activity_retention explore in
     # models/app_usage.model.lkml (market_mapping is joined via user_last_properties,

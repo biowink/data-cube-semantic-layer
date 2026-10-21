@@ -1,0 +1,88 @@
+cubes:
+  - name: company_targets
+    sql_table: rep.company_targets_with_actuals
+    description: "Migrated from views/sales/company_targets.view.lkml"
+
+    # The source LookML view defines no primary key and the explore has no joins,
+    # so none is set here either. Add one before joining this cube to others.
+
+    dimensions:
+      - name: planning_date
+        description: "Date that the target was set"
+        sql: planning_date
+        type: time
+
+      # type: date_month in LookML -> time dimension; query it at month granularity
+      - name: month
+        sql: "{CUBE}.month"
+        type: time
+
+      - name: next_month
+        description: "For use with fields we look at one month in review"
+        sql: "DATE_ADD('month', 1, {CUBE}.month)"
+        type: time
+
+      - name: stream
+        description: "Whether the metric applies to B2C, B2B2C, or both (Combined)"
+        sql: stream
+        type: string
+
+      - name: segment
+        description: "Company segment that the target is set for"
+        sql: segment
+        type: string
+
+      - name: metric
+        sql: metric
+        type: string
+
+      - name: value_format
+        sql: value_format
+        type: string
+
+    measures:
+      - name: target
+        sql: value
+        type: avg
+
+      - name: previous_month_target
+        sql: previous_month_value
+        type: avg
+
+      - name: target_mom_growth
+        sql: "{target} / {previous_month_target} - 1"
+        type: number
+        meta:
+          format: percent_1
+
+      - name: actual
+        sql: actual
+        type: avg
+
+      - name: performance_against_plan
+        sql: "{actual} / {target} - 1"
+        type: number
+        meta:
+          format: percent_1
+
+      - name: previous_month_actual
+        sql: previous_month_actual
+        type: avg
+
+      - name: previous_year_actual
+        sql: previous_year_actual
+        type: avg
+
+      - name: actual_mom_growth
+        title: "Actual MoM Growth"
+        sql: "{actual} / {previous_month_actual} - 1"
+        type: number
+        meta:
+          format: percent_1
+
+      - name: actual_yoy_growth
+        title: "Actual YoY Growth"
+        sql: "{actual} / {previous_year_actual} - 1"
+        type: number
+        meta:
+          format: percent_1

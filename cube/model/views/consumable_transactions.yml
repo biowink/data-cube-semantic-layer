@@ -1,0 +1,23 @@
+views:
+  - name: consumable_transactions
+    title: "Consumable Transactions"
+    description: "Equivalent of the consumable_transactions explore in models/sales.model.lkml"
+
+    # Joined cubes are prefixed with their cube name, which Looker kept apart by
+    # view name (e.g. user_count exists on both the base cube and users).
+    cubes:
+      - join_path: consumable_transactions_base
+        includes: "*"
+
+      # view_label: "Users"
+      - join_path: consumable_transactions_base.users_base
+        prefix: true
+        includes: "*"
+        excludes:
+          - analytics_id
+
+      - join_path: consumable_transactions_base.user_profiles
+        prefix: true
+        includes: "*"
+        excludes:
+          - analytics_id
