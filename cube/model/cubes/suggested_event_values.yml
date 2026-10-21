@@ -1,7 +1,7 @@
 # Shared refresh interval for every cube in this file, in place of the
 # LookML datagroup_trigger (nightly_datagroup). Change it here only.
 # Cron: Thursdays at 03:00 (UTC, Cube's default when no timezone is set).
-{% set suggestions_refresh_every = "0 3 * * 4" %}
+{% set suggestions_refresh_every = "0 8 * * 4" %}
 
 cubes:
   - name: suggested_event_properties
@@ -17,7 +17,7 @@ cubes:
     description: "Migrated from the suggested_event_properties LookML view"
     public: false
     refresh_key:
-      every: "{{ suggestions_refresh_every }}"
+      every: {{ suggestions_refresh_every }}
 
     # Stored in Cube Store and rebuilt by the refresh worker on the same schedule,
     # like the LookML PDT, so queries read the stored rows instead of der.events.
@@ -26,7 +26,7 @@ cubes:
         dimensions:
           - event_property_name
         refresh_key:
-          every: "{{ suggestions_refresh_every }}"
+          every: {{ suggestions_refresh_every }}
 
     dimensions:
       # The LookML declares mobile_event_name {} and event_property_name {} with no
@@ -48,7 +48,7 @@ cubes:
     description: "Migrated from the suggested_mobile_event_names LookML view"
     public: false
     refresh_key:
-      every: "{{ suggestions_refresh_every }}"
+      every: {{ suggestions_refresh_every }}
 
     # Stored in Cube Store and rebuilt by the refresh worker on the same schedule,
     # like the LookML PDT, so queries read the stored rows instead of der.events.
@@ -57,7 +57,7 @@ cubes:
         dimensions:
           - mobile_event_name
         refresh_key:
-          every: "{{ suggestions_refresh_every }}"
+          every: {{ suggestions_refresh_every }}
 
     dimensions:
       # One row per mobile_event_name (GROUP BY above), so it is the primary key.
@@ -77,7 +77,7 @@ cubes:
     description: "Migrated from the suggested_countries LookML view"
     public: false
     refresh_key:
-      every: "{{ suggestions_refresh_every }}"
+      every: {{ suggestions_refresh_every }}
 
     # Stored in Cube Store and rebuilt by the refresh worker on the same schedule,
     # like the LookML PDT, so queries read the stored rows instead of der.events.
@@ -86,7 +86,7 @@ cubes:
         dimensions:
           - country_name
         refresh_key:
-          every: "{{ suggestions_refresh_every }}"
+          every: {{ suggestions_refresh_every }}
 
     dimensions:
       # One row per country_name (GROUP BY above), so it is the primary key.
@@ -106,7 +106,7 @@ cubes:
     description: "Migrated from the suggested_languages LookML view"
     public: false
     refresh_key:
-      every: "{{ suggestions_refresh_every }}"
+      every: {{ suggestions_refresh_every }}
 
     # Stored in Cube Store and rebuilt by the refresh worker on the same schedule,
     # like the LookML PDT, so queries read the stored rows instead of der.events.
@@ -115,7 +115,7 @@ cubes:
         dimensions:
           - language
         refresh_key:
-          every: "{{ suggestions_refresh_every }}"
+          every: {{ suggestions_refresh_every }}
 
     dimensions:
       # One row per language (GROUP BY above), so it is the primary key.
@@ -135,7 +135,7 @@ cubes:
     description: "Migrated from the suggested_platforms LookML view"
     public: false
     refresh_key:
-      every: "{{ suggestions_refresh_every }}"
+      every: {{ suggestions_refresh_every }}
 
     # Stored in Cube Store and rebuilt by the refresh worker on the same schedule,
     # like the LookML PDT, so queries read the stored rows instead of der.events.
@@ -144,7 +144,7 @@ cubes:
         dimensions:
           - platform
         refresh_key:
-          every: "{{ suggestions_refresh_every }}"
+          every: {{ suggestions_refresh_every }}
 
     dimensions:
       # One row per platform (GROUP BY above), so it is the primary key.
@@ -164,7 +164,7 @@ cubes:
     description: "Migrated from the suggested_schema_names LookML view"
     public: false
     refresh_key:
-      every: "{{ suggestions_refresh_every }}"
+      every: {{ suggestions_refresh_every }}
 
     # Stored in Cube Store and rebuilt by the refresh worker on the same schedule,
     # like the LookML PDT, so queries read the stored rows instead of der.events.
@@ -173,7 +173,7 @@ cubes:
         dimensions:
           - schema_name
         refresh_key:
-          every: "{{ suggestions_refresh_every }}"
+          every: {{ suggestions_refresh_every }}
 
     dimensions:
       # One row per schema_name (GROUP BY above), so it is the primary key.
@@ -193,7 +193,7 @@ cubes:
     description: "Migrated from the suggested_navigation_contexts LookML view"
     public: false
     refresh_key:
-      every: "{{ suggestions_refresh_every }}"
+      every: {{ suggestions_refresh_every }}
 
     # Stored in Cube Store and rebuilt by the refresh worker on the same schedule,
     # like the LookML PDT, so queries read the stored rows instead of der.events.
@@ -202,7 +202,7 @@ cubes:
         dimensions:
           - navigation_context
         refresh_key:
-          every: "{{ suggestions_refresh_every }}"
+          every: {{ suggestions_refresh_every }}
 
     dimensions:
       # One row per navigation_context (GROUP BY above), so it is the primary key.
@@ -222,7 +222,7 @@ cubes:
     description: "Migrated from the suggested_product_tiers LookML view"
     public: false
     refresh_key:
-      every: "{{ suggestions_refresh_every }}"
+      every: {{ suggestions_refresh_every }}
 
     # Stored in Cube Store and rebuilt by the refresh worker on the same schedule,
     # like the LookML PDT, so queries read the stored rows instead of der.events.
@@ -231,7 +231,7 @@ cubes:
         dimensions:
           - product_tier
         refresh_key:
-          every: "{{ suggestions_refresh_every }}"
+          every: {{ suggestions_refresh_every }}
 
     dimensions:
       # One row per product_tier (GROUP BY above), so it is the primary key.
@@ -251,7 +251,7 @@ cubes:
     description: "Migrated from the suggested_modes LookML view"
     public: false
     refresh_key:
-      every: "{{ suggestions_refresh_every }}"
+      every: {{ suggestions_refresh_every }}
 
     # Stored in Cube Store and rebuilt by the refresh worker on the same schedule,
     # like the LookML PDT, so queries read the stored rows instead of der.events.
@@ -260,7 +260,7 @@ cubes:
         dimensions:
           - mode
         refresh_key:
-          every: "{{ suggestions_refresh_every }}"
+          every: {{ suggestions_refresh_every }}
 
     dimensions:
       # One row per mode (GROUP BY above), so it is the primary key.
@@ -280,7 +280,7 @@ cubes:
     description: "Migrated from the suggested_article_categories LookML view"
     public: false
     refresh_key:
-      every: "{{ suggestions_refresh_every }}"
+      every: {{ suggestions_refresh_every }}
 
     # Stored in Cube Store and rebuilt by the refresh worker on the same schedule,
     # like the LookML PDT, so queries read the stored rows instead of der.events.
@@ -289,7 +289,7 @@ cubes:
         dimensions:
           - article_category
         refresh_key:
-          every: "{{ suggestions_refresh_every }}"
+          every: {{ suggestions_refresh_every }}
 
     dimensions:
       # One row per article_category (GROUP BY above), so it is the primary key.
@@ -309,7 +309,7 @@ cubes:
     description: "Migrated from the suggested_article_titles LookML view"
     public: false
     refresh_key:
-      every: "{{ suggestions_refresh_every }}"
+      every: {{ suggestions_refresh_every }}
 
     # Stored in Cube Store and rebuilt by the refresh worker on the same schedule,
     # like the LookML PDT, so queries read the stored rows instead of der.events.
@@ -318,7 +318,7 @@ cubes:
         dimensions:
           - article_title
         refresh_key:
-          every: "{{ suggestions_refresh_every }}"
+          every: {{ suggestions_refresh_every }}
 
     dimensions:
       # One row per article_title (GROUP BY above), so it is the primary key.
@@ -338,7 +338,7 @@ cubes:
     description: "Migrated from the suggested_topic_names LookML view"
     public: false
     refresh_key:
-      every: "{{ suggestions_refresh_every }}"
+      every: {{ suggestions_refresh_every }}
 
     # Stored in Cube Store and rebuilt by the refresh worker on the same schedule,
     # like the LookML PDT, so queries read the stored rows instead of der.events.
@@ -347,7 +347,7 @@ cubes:
         dimensions:
           - topic_name
         refresh_key:
-          every: "{{ suggestions_refresh_every }}"
+          every: {{ suggestions_refresh_every }}
 
     dimensions:
       # One row per topic_name (GROUP BY above), so it is the primary key.
@@ -367,7 +367,7 @@ cubes:
     description: "Migrated from the suggested_meta_ids LookML view"
     public: false
     refresh_key:
-      every: "{{ suggestions_refresh_every }}"
+      every: {{ suggestions_refresh_every }}
 
     # Stored in Cube Store and rebuilt by the refresh worker on the same schedule,
     # like the LookML PDT, so queries read the stored rows instead of der.events.
@@ -376,7 +376,7 @@ cubes:
         dimensions:
           - meta_id
         refresh_key:
-          every: "{{ suggestions_refresh_every }}"
+          every: {{ suggestions_refresh_every }}
 
     dimensions:
       # Named topic_name in the LookML (copy-paste from suggested_topic_names);
