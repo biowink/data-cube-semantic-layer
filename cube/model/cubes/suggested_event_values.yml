@@ -1,7 +1,7 @@
 # Shared refresh interval for every cube in this file, in place of the
 # LookML datagroup_trigger (nightly_datagroup). Change it here only.
-# Cron: Mondays at 03:00 (UTC, Cube's default when no timezone is set).
-{% set suggestions_refresh_every = "0 3 * * 1" %}
+# Cron: Thursdays at 03:00 (UTC, Cube's default when no timezone is set).
+{% set suggestions_refresh_every = "0 3 * * 4" %}
 
 cubes:
   - name: suggested_event_properties
