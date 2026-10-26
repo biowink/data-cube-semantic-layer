@@ -40,6 +40,10 @@ cubes:
           DAY_OF_YEAR({CUBE}.date)
         type: number
 
+      - name: d7_mature_cohorts_only
+        sql: "{CUBE}.date < date_add('day', -8, current_date)"
+        type: boolean
+
     # Ad Dimensions
       - name: network
         sql: |-
