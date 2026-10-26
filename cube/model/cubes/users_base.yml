@@ -114,3 +114,19 @@ cubes:
       - name: user_count
         sql: "{CUBE}.analytics_id"
         type: count_distinct
+
+      # New users so far this month, complete days only
+      - name: new_users_mtd
+        type: count
+        filters:
+          - sql: >
+              {CUBE}.backend_created_at >= date_trunc('month', current_date) AND {CUBE}.backend_created_at < current_date
+
+      # Linear projection to the end of the month
+      - name: projected_new_users
+        type: number
+        sql: >
+          {new_users_mtd} * 1.0
+          * day(last_day_of_month(current_date))
+          / NULLIF(day(current_date) - 1, 0)
+        format: number
