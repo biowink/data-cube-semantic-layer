@@ -324,6 +324,23 @@ cubes:
         format: currency
         currency: EUR
 
+      # To create linear projection of ad spend
+      - name: ad_spend_mtd
+        type: sum
+        format: currency
+        currency: EUR
+        sql: CASE WHEN {CUBE}.date >= date_trunc('month', current_date) AND {CUBE}.date < current_date THEN {CUBE}.cost ELSE NULL END
+
+      # Linear projection to the end of the month
+      - name: projected_ad_spend
+        type: number
+        sql: >
+          {ad_spend_mtd} * 1.0
+          * day(last_day_of_month(current_date))
+          / NULLIF(day(current_date) - 1, 0)
+        format: currency
+        currency: EUR
+
       - name: ad_spend_d7
         description: Ad spend as reported by each network
         sql: |-
